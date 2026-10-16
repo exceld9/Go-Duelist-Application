@@ -543,9 +543,9 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
   const grid = new THREE.GridHelper(10, 20, 0x1e293b, 0x0f172a); grid.position.y = FLOOR; scene.add(grid);
 
   function label(text, x, y, z, size = 0.28, color = '#64748b') {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-    const g = c.getContext('2d'); g.font = '600 28px Monospace'; g.fillStyle = color;
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 32);
+    const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+    const g = c.getContext('2d'); g.font = '600 32px Monospace'; g.fillStyle = color;
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 256, 64);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
     s.scale.set(size * 4, size, 1); s.position.set(x, y, z); scene.add(s);
   }
