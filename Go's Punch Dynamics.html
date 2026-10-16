@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravitational Punch Dynamics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+:root{
+  --bg: #090d16;
+  --panel: #111827;
+  --panel-border: #1e293b;
+  --ink: #f8fafc;
+  --mute: #64748b;
+  --blue: #38bdf8;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --green: #4ade80;
+  --purple: #c084fc;
+}
+*{box-sizing:border-box}
+body{
+  margin: 0;
+  padding: 24px 16px;
+  background: var(--bg);
+  color: var(--ink);
+  display: flex;
+  justify-content: center;
+  font: 13px/1.4 "JetBrains Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
+.hud{
+  width: 100%;
+  max-width: 960px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+header{
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 12px;
+}
+h1{
+  margin: 0;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.sys-status{ font-size: 0.75rem; color: var(--blue); letter-spacing: 0.08em; }
+
+.layout-grid{
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 20px;
+}
+@media(max-width: 768px){ .layout-grid{ grid-template-columns: 1fr; } }
+
+.view{
+  position: relative;
+  height: 330px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #050811;
+  cursor: grab;
+}
+.view:active{ cursor: grabbing; }
+#sim3d,#sim3d canvas{ width: 100%; height: 100%; display: block; }
+
+.ctl{ display: flex; flex-direction: column; gap: 6px; }
+.ctl-head{ display: flex; justify-content: space-between; font-weight: 600; }
+input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
+
+.metrics{ display: flex; flex-direction: column; gap: 8px; }
+.metric-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.metric-row:hover{ background: rgba(255,255,255,0.05); }
+.metric-row.selected{ border-color: var(--blue); background: rgba(56, 189, 248, 0.1); }
+.metric-row dt{ color: var(--mute); margin: 0; font-size: 0.78rem; }
+.metric-row dd{ margin: 0; font-weight: 600; font-size: 0.9rem; }
+
+.metric-row.highlight{
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.metric-row.highlight.selected{ border-color: var(--red); background: rgba(248, 113, 113, 0.2); }
+.metric-row.highlight dt{ color: #fca5a5; font-weight: 600; }
+.metric-row.highlight dd{ color: var(--red); font-size: 1.05rem; }
+
+.damage-banner{
+  background: #050811;
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--red);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.graph-container{
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 14px;
+  background: #050811;
+}
+.graph-head{
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--mute);
+  margin-bottom: 6px;
+}
+#curve{ width: 100%; height: 160px; display: block; }
+</style>
+</head>
+<body>
+<main class="hud">
+  <header>
+    <h1>Gravitational Punch Dynamics</h1>
+    <span class="sys-status">MODEL // GO_01</span>
+  </header>
+
+  <div class="ctl">
+    <div class="ctl-head">
+      <span>SWING SPEED (v)</span>
+      <output id="vVal" style="color:var(--blue)"></output>
+    </div>
+    <input type="range" id="vSlider" min="0.1" max="16" step="0.1" value="16">
+  </div>
+
+  <div class="layout-grid">
+    <div class="view">
+      <div id="sim3d"></div>
+    </div>
+
+    <dl class="metrics">
+      <div class="metric-row" data-stat="weight"><dt>EFFECTIVE WEIGHT [G]</dt><dd id="wVal"></dd></div>
+      <div class="metric-row" data-stat="temp"><dt>COMPRESSION TEMP [°C]</dt><dd id="tempVal"></dd></div>
+      <div class="metric-row" data-stat="strain"><dt>TIDAL STRAIN [%]</dt><dd id="sVal"></dd></div>
+      <div class="metric-row highlight selected" data-stat="force"><dt>PEAK IMPACT FORCE [MN]</dt><dd id="fVal"></dd></div>
+    </dl>
+  </div>
+
+  <div class="damage-banner">
+    <strong style="color:var(--red)">IMPACT SCALE:</strong> <span id="desc"></span>
+  </div>
+
+  <div class="graph-container">
+    <div class="graph-head">
+      <span>STATISTIC CURVES (CLICK A STAT ABOVE TO HIGHLIGHT)</span>
+      <span id="activeStatLabel" style="color:var(--red)">FOCUS: PEAK IMPACT FORCE</span>
+    </div>
+    <canvas id="curve"></canvas>
+  </div>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const vSlider = $('vSlider'), vVal =$('vVal'), gVal = $('gVal'), wVal =$('wVal'),
+        tempVal = $('tempVal'), sVal =$('sVal'), fVal = $('fVal'), desc =$('desc'),
+        activeStatLabel = $('activeStatLabel'), host = $('sim3d'), canvas =$('curve'), ctx = canvas.getContext('2d');
+
+  const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
+  const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  let activeStat = 'force'; // 'weight', 'temp', 'strain', 'force'
+
+  // Multi-Stage Damage Tiers (8 Stages)
+  const TIERS = [
+    [14.0, 'Stage 1 — Light Sparring Jab: Safe velocity. Zero recoil or structural strain.'],
+    [11.0, 'Stage 2 — Heavy Boxing Punch: Shatters jawbones and causes severe concussive recoil.'],
+    [8.0,  'Stage 3 — Vehicle Collision Level: Equivalent to a 60 km/h car crash. Demolishes brick walls.'],
+    [5.0,  'Stage 4 — Freight Train Impact: Sufficient kinetic force to crush reinforced concrete barriers.'],
+    [3.0,  'Stage 5 — Bunker Buster Shell: Tremendous shockwave. Collapses underground concrete fortifications.'],
+    [1.5,  'Stage 6 — Seismic Shockwave: Demolishes multi-story buildings; extreme tidal strain on Go\'s joints.'],
+    [0.5,  'Stage 7 — Meteorite Impact: Creates massive surface craters; extreme air displacement & localized heating.'],
+    [0.0,  'Stage 8 — Core Fusion Ignition: Micro-blackhole gravitational field. Triggers plasma nuclear fusion.']
+  ];
+
+  // ───────── Scene ─────────
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050811);
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(0.6, 1.5, 6.4);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(DPR);
+  host.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  Object.assign(controls, { enableDamping: true, dampingFactor: 0.08, minDistance: 2.5, maxDistance: 12,
+                            maxPolarAngle: Math.PI / 2 - 0.02, target: new THREE.Vector3(0, -0.2, 0) });
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.8));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 4); scene.add(sun);
+
+  // ───────── Restored 3D 1-Meter Distance Ruler ─────────
+  const FLOOR = -0.9, START = -2.4, PATH = 4.0, IMPACT = START + PATH; // 4 scene units = 1 m
+  const grid = new THREE.GridHelper(10, 20, 0x1e293b, 0x0f172a); grid.position.y = FLOOR; scene.add(grid);
+
+  function label(text, x, y, z, size = 0.28, color = '#64748b') {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    const g = c.getContext('2d'); g.font = '600 28px Monospace'; g.fillStyle = color;
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 32);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
+    s.scale.set(size * 4, size, 1); s.position.set(x, y, z); scene.add(s);
+  }
+  const AX_Z = 1.1, tickPts = [START, FLOOR, AX_Z, IMPACT, FLOOR, AX_Z];
+  for (let d = 0; d <= 1.001; d += 0.25) {
+    const sx = START + d * PATH;
+    tickPts.push(sx, FLOOR, AX_Z, sx, FLOOR, AX_Z + 0.12);
+    label(d.toFixed(2) + 'm', sx, FLOOR, AX_Z + 0.32, 0.2);
+  }
+  const axGeo = new THREE.BufferGeometry(); axGeo.setAttribute('position', new THREE.Float32BufferAttribute(tickPts, 3));
+  scene.add(new THREE.LineSegments(axGeo, new THREE.LineBasicMaterial({ color: 0x334155 })));
+  label('1.00m Travel Distance', 0, FLOOR, AX_Z + 0.65, 0.22, '#38bdf8');
+
+  // ───────── Target Plate ─────────
+  const ROWS = 6, COLS = 6, N = ROWS * COLS, BH = 1.6 / ROWS, BD = 1.6 / COLS, WALL_X = 2.0;
+  const wall = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, BH * 0.95, BD * 0.95),
+                                       new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.1 }), N);
+  wall.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(wall);
+
+  const cell = [], prof = new Float32Array(N), dummy = new THREE.Object3D(), tmp = new THREE.Color();
+  const debrisVel = [];
+
+  for (let r = 0, i = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++, i++) {
+    const y = (r - ROWS / 2 + 0.5) * BH, z = (c - COLS / 2 + 0.5) * BD;
+    cell.push([y, z]); 
+    const p = Math.exp(-(y * y + z * z) / 0.5); prof[i] = p;
+
+    debrisVel.push({
+      vx: (0.8 + Math.random() * 1.5) * (0.3 + p * 1.5),
+      vy: (Math.random() - 0.5) * 1.2 * (0.2 + p),
+      vz: (Math.random() - 0.5) * 1.2 * (0.2 + p),
+      rx: (Math.random() - 0.5) * 8, ry: (Math.random() - 0.5) * 8, rz: (Math.random() - 0.5) * 8
+    });
+  }
+
+  const STOPS = [[0.17, 0.23, 0.56], [0.17, 0.56, 0.66], [0.31, 0.69, 0.43], [0.9, 0.76, 0.21], [0.75, 0.22, 0.17]];
+  function colormap(t, out) {
+    const f = Math.min(1, Math.max(0, t)) * (STOPS.length - 1), i = Math.min(STOPS.length - 2, f | 0), u = f - i, a = STOPS[i], b = STOPS[i + 1];
+    return out.setRGB(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u);
+  }
+
+  function paintWall(load, stress) {
+    const destructFactor = Math.max(0, (stress - 0.1) / 0.9);
+
+    for (let i = 0; i < N; i++) {
+      const scatterAmount = load * destructFactor;
+      const bendAmount = load * (1 - destructFactor) * (0.05 + stress * 0.25) * prof[i];
+
+      dummy.position.set(
+        WALL_X + bendAmount + scatterAmount * debrisVel[i].vx,
+        cell[i][0] + scatterAmount * debrisVel[i].vy,
+        cell[i][1] + scatterAmount * debrisVel[i].vz
+      );
+      dummy.rotation.set(
+        scatterAmount * debrisVel[i].rx,
+        scatterAmount * debrisVel[i].ry,
+        scatterAmount * debrisVel[i].rz
+      );
+      dummy.updateMatrix(); 
+      wall.setMatrixAt(i, dummy.matrix);
+      wall.setColorAt(i, colormap(load * (0.08 + 0.92 * stress) * prof[i] + (1 - load) * stress * prof[i], tmp).lerp(tmp.clone().set(0x1e293b), 1 - Math.min(1, Math.max(load, stress))));
+    }
+    wall.instanceMatrix.needsUpdate = true; 
+    wall.instanceColor.needsUpdate = true;
+  }
+
+  // Fist Group
+  const fist = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.4, metalness: 0.5 });
+  const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.6, 24).rotateZ(Math.PI / 2), steel); arm.position.x = -0.8; fist.add(arm);
+  fist.add(new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.55, 0.55), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.5 })));
+  const fieldMat = new THREE.MeshBasicMaterial({ color: 0xf87171, transparent: true, opacity: 0, depthWrite: false });
+  const field = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 24), fieldMat); fist.add(field);
+  scene.add(fist);
+
+  const velArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 1, 0x38bdf8, 0.18, 0.1);
+  const forceArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(WALL_X + 0.1, 0, 0), 1, 0xf87171, 0.22, 0.12);
+  forceArrow.visible = false; scene.add(velArrow, forceArrow);
+
+  // Loop
+  const HOLD = 1.6, RAMP = 0.25;
+  let x = START, hold = 0, last = null, visible = true, stress = 0, fieldOpacity = 0;
+
+  new IntersectionObserver(e => { visible = e[0].isIntersecting; if (visible) last = null; }).observe(host);
+
+  function resize() {
+    const w = host.clientWidth, h = host.clientHeight;
+    if (w && h) { camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h); }
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    if (cw && ch) { canvas.width = cw * DPR; canvas.height = ch * DPR; drawGraph(); }
+  }
+  new ResizeObserver(resize).observe(host); new ResizeObserver(resize).observe(canvas);
+
+  function reset() { hold = 0; x = START; forceArrow.visible = false; paintWall(0, stress); }
+
+  function frame(ts) {
+    requestAnimationFrame(frame);
+    if (!visible) return;
+    const dt = last == null ? 0 : Math.min((ts - last) / 1000, 0.05); last = ts;
+    const v = parseFloat(vSlider.value);
+
+    if (hold <= 0) {
+      x = Math.min(IMPACT - 0.4, x + (0.5 + ((v - V_MIN) / SPAN) * 12) * dt);
+      if (x >= IMPACT - 0.4) { hold = HOLD; forceArrow.visible = true; }
+    } else {
+      hold -= dt;
+      paintWall(Math.min(1, (HOLD - hold) / RAMP), stress);
+      if (hold <= 0) reset();
+    }
+    fist.position.x = x;
+    field.material.opacity += (fieldOpacity - field.material.opacity) * Math.min(1, dt * 8);
+
+    const L = 0.35 + (v / V_MAX) * 1.3;
+    velArrow.position.set(x + 0.4, 0.62, 0); velArrow.setLength(L, 0.18, 0.1);
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // ───────── Multi-Curve Interactive Graph ─────────
+  function getCurveVal(stat, v) {
+    if (stat === 'force') return slow(v, 2.5);
+    if (stat === 'weight') return slow(v, 2.2);
+    if (stat === 'strain') return slow(v, 2.2);
+    if (stat === 'temp') {
+      if (v >= 7.0) return Math.pow((16 - v) / 9, 2) * 0.1;
+      return 0.1 + Math.min(0.9, (7.0 - v) / 6.9);
+    }
+    return 0;
+  }
+
+  function drawGraph() {
+    const w = canvas.width, h = canvas.height, d = DPR, L = 40 * d, R = 15 * d, T = 15 * d, B = 25 * d;
+    if (!w || !h) return;
+    const v = parseFloat(vSlider.value), px = f => L + f * (w - L - R), py = f => h - B - f * (h - T - B);
+    ctx.clearRect(0, 0, w, h);
+    ctx.font = `${9 * d}px Monospace`; ctx.lineWidth = d;
+
+    // Grid Lines
+    for (let i = 0; i <= 4; i++) {
+      const f = i / 4, y = py(f);
+      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke();
+      ctx.fillStyle = '#64748b'; ctx.textAlign = 'right'; ctx.fillText((f * 100).toFixed(0) + '%', L - 6 * d, y + 3 * d);
+    }
+    for (let i = 0; i <= 4; i++) {
+      const f = i / 4, xx = px(f);
+      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(xx, T); ctx.lineTo(xx, h - B); ctx.stroke();
+      ctx.fillStyle = '#64748b'; ctx.textAlign = 'center'; ctx.fillText((V_MIN + f * SPAN).toFixed(0) + 'm/s', xx, h - B + 14 * d);
+    }
+
+    const curves = [
+      { id: 'weight', color: css('--blue') },
+      { id: 'temp', color: css('--purple') },
+      { id: 'strain', color: css('--amber') },
+      { id: 'force', color: css('--red') }
+    ];
+
+    // Draw non-selected curves first
+    curves.forEach(c => {
+      if (c.id === activeStat) return;
+      ctx.save();
+      ctx.beginPath(); ctx.rect(L, T, w - L - R, h - T - B); ctx.clip();
+      ctx.lineWidth = 1 * d; ctx.strokeStyle = c.color; ctx.globalAlpha = 0.25;
+      const path = new Path2D();
+      for (let i = 0; i <= 100; i++) {
+        const vx = V_MIN + (i / 100) * SPAN;
+        const xPos = px(i / 100), yPos = py(getCurveVal(c.id, vx));
+        i ? path.lineTo(xPos, yPos) : path.moveTo(xPos, yPos);
+      }
+      ctx.stroke(path);
+      ctx.restore();
+    });
+
+    // Draw active highlighted curve
+    const activeObj = curves.find(c => c.id === activeStat);
+    if (activeObj) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(L, T, w - L - R, h - T - B); ctx.clip();
+      ctx.lineWidth = 2.5 * d; ctx.strokeStyle = activeObj.color; ctx.globalAlpha = 1.0;
+      const path = new Path2D();
+      for (let i = 0; i <= 100; i++) {
+        const vx = V_MIN + (i / 100) * SPAN;
+        const xPos = px(i / 100), yPos = py(getCurveVal(activeObj.id, vx));
+        i ? path.lineTo(xPos, yPos) : path.moveTo(xPos, yPos);
+      }
+      ctx.stroke(path);
+      ctx.restore();
+
+      // Current setting marker on active curve
+      const cx = px((v - V_MIN) / SPAN), cy = py(getCurveVal(activeObj.id, v));
+      ctx.fillStyle = '#050811'; ctx.strokeStyle = activeObj.color; ctx.lineWidth = 2.5 * d;
+      ctx.beginPath(); ctx.arc(cx, cy, 4.5 * d, 0, 7); ctx.fill(); ctx.stroke();
+    }
+  }
+
+  // Stats Selection Event Listeners
+  document.querySelectorAll('.metric-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.metric-row').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      activeStat = row.dataset.stat;
+      
+      const labels = {
+        weight: ['EFFECTIVE WEIGHT', 'var(--blue)'],
+        temp: ['COMPRESSION TEMP', 'var(--purple)'],
+        strain: ['TIDAL STRAIN', 'var(--amber)'],
+        force: ['PEAK IMPACT FORCE', 'var(--red)']
+      };
+      activeStatLabel.textContent = `FOCUS: ${labels[activeStat][0]}`;
+      activeStatLabel.style.color = css(labels[activeStat][1]);
+      drawGraph();
+    });
+  });
+
+  // Update Stats
+  const fmt = n => n.toLocaleString('en-US');
+  function update() {
+    const v = parseFloat(vSlider.value);
+    const g = Math.max(1, Math.round(1 + 499 * slow(v, 2.2)));
+    const strain = Math.round(g / 5);
+    const F = 3200 + (10500000 - 3200) * slow(v, 2.5);
+
+    let tempC;
+    if (v >= 7.0) {
+      tempC = Math.round(25 + (75 * Math.pow((16 - v) / 9, 2)));
+    } else {
+      const expFactor = Math.pow(10, (7.0 - v) * (5.176 / 6.9));
+      tempC = Math.round(100 * expFactor);
+    }
+
+    const formatTemp = t => {
+      if (t >= 1e6) return `~${(t / 1e6).toFixed(1)}M °C`;
+      if (t >= 1e3) return `~${fmt(t)} °C`;
+      return `~${t} °C`;
+    };
+
+    vVal.textContent = v.toFixed(1) + ' m/s';
+    wVal.textContent = fmt(MASS * g) + ' kg (' + fmt(g) + ' G)';
+    tempVal.textContent = formatTemp(tempC);
+    fVal.textContent = F >= 1e6 ? (F / 1e6).toFixed(2) + ' MN' : (F / 1e3).toFixed(1) + ' kN';
+
+    const [label, col] = strain >= 75 ? ['CRITICAL', css('--red')] : strain >= 35 ? ['HIGH STRAIN', css('--amber')] : ['SAFE', css('--green')];
+    sVal.textContent = `${strain}% [${label}]`; sVal.style.color = col;
+
+    desc.textContent = TIERS.find(t => v >= t[0])[1];
+
+    stress = slow(v, 2.5);
+    fieldOpacity = Math.min(1, g / 500) * 0.28;
+    forceArrow.setLength(0.4 + Math.sqrt(F / 10.5e6) * 1.4, 0.22, 0.12);
+    drawGraph();
+  }
+
+  vSlider.addEventListener('input', () => { update(); if (hold <= 0) reset(); });
+
+  reset(); update(); resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
