@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gravitational Punch Dynamics</title>
+<title>Fist Power-Speed Simulation & Duelist Application</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
@@ -26,17 +26,197 @@ body{
   background: var(--bg);
   color: var(--ink);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
   font: 13px/1.4 "JetBrains Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
-.hud{
+.app-container{
   width: 100%;
   max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.doc-panel, .hud{
+  width: 100%;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Wide Banner & Interactive Expand Styling */
+.banner-container {
+  width: 100%;
+  height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  margin-bottom: 20px;
+  position: relative;
+  cursor: zoom-in;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.banner-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(56, 189, 248, 0.25);
+}
+.banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+}
+
+/* In-Page Image Modal Viewer */
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 8, 17, 0.92);
+  backdrop-filter: blur(8px);
+  justify-content: center;
+  align-items: center;
+  cursor: zoom-out;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.image-modal.active {
+  display: flex;
+  opacity: 1;
+}
+.modal-content {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 10px;
+  border: 1px solid var(--blue);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
+  object-fit: contain;
+}
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  color: var(--ink);
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+.modal-close:hover {
+  color: var(--red);
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--blue);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+.doc-title{
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--blue);
+  margin: 0;
+}
+.doc-badge{
+  display: inline-block;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* Collapsible Spoiler Styling */
+details.doc-section {
+  margin-bottom: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(5, 8, 17, 0.4);
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+details.doc-section[open] {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(5, 8, 17, 0.8);
+}
+summary.doc-section-title {
+  font-size: 1.05rem;
+  color: var(--amber);
+  padding: 14px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+}
+summary.doc-section-title::-webkit-details-marker {
+  display: none;
+}
+summary.doc-section-title::after {
+  content: '►';
+  font-size: 0.8rem;
+  color: var(--blue);
+  transition: transform 0.2s ease;
+}
+details[open] summary.doc-section-title::after {
+  transform: rotate(90deg);
+}
+summary.doc-section-title:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.section-body {
+  padding: 0 16px 16px 16px;
+  border-top: 1px dashed var(--panel-border);
+}
+
+.doc-subsection-title{
+  font-size: 0.88rem;
+  color: var(--red);
+  margin: 14px 0 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.doc-text{
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin: 0 0 8px 0;
+}
+.doc-list{
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+  color: #cbd5e1;
+}
+.doc-list li{
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.doc-list strong{
+  color: var(--ink);
+}
+
+/* Simulation HUD Styling */
+.hud{
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -62,7 +242,10 @@ h1{
   grid-template-columns: 1.2fr 0.8fr;
   gap: 20px;
 }
-@media(max-width: 768px){ .layout-grid{ grid-template-columns: 1fr; } }
+@media(max-width: 768px){ 
+  .layout-grid{ grid-template-columns: 1fr; }
+  .banner-container{ height: 150px; }
+}
 
 .view{
   position: relative;
@@ -133,52 +316,151 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
 </style>
 </head>
 <body>
-<main class="hud">
-  <header>
-    <h1>Gravitational Punch Dynamics</h1>
-    <span class="sys-status">MODEL // GO_01</span>
-  </header>
 
-  <div class="ctl">
-    <div class="ctl-head">
-      <span>SWING SPEED (v)</span>
-      <output id="vVal" style="color:var(--blue)"></output>
-    </div>
-    <input type="range" id="vSlider" min="0.1" max="16" step="0.1" value="16">
-  </div>
+<div class="app-container">
 
-  <div class="layout-grid">
-    <div class="view">
-      <div id="sim3d"></div>
+  <!-- DUELIST APPLICATION DOCUMENT -->
+  <section class="doc-panel">
+    <!-- CLICKABLE HERO BANNER -->
+    <div class="banner-container" id="bannerBtn" title="Click to expand artwork">
+      <img src="https://i.imgur.com/59hhbSm.png" alt="Go Character Banner" class="banner-img">
     </div>
 
-    <dl class="metrics">
-      <div class="metric-row" data-stat="weight"><dt>EFFECTIVE WEIGHT [G]</dt><dd id="wVal"></dd></div>
-      <div class="metric-row" data-stat="temp"><dt>COMPRESSION TEMP [°C]</dt><dd id="tempVal"></dd></div>
-      <div class="metric-row" data-stat="strain"><dt>TIDAL STRAIN [%]</dt><dd id="sVal"></dd></div>
-      <div class="metric-row highlight selected" data-stat="force"><dt>PEAK IMPACT FORCE [MN]</dt><dd id="fVal"></dd></div>
-    </dl>
-  </div>
-
-  <div class="damage-banner">
-    <strong style="color:var(--red)">IMPACT SCALE:</strong> <span id="desc"></span>
-  </div>
-
-  <div class="graph-container">
-    <div class="graph-head">
-      <span>STATISTIC CURVES (CLICK A STAT ABOVE TO HIGHLIGHT)</span>
-      <span id="activeStatLabel" style="color:var(--red)">FOCUS: PEAK IMPACT FORCE</span>
+    <div class="profile-header">
+      <h1 class="doc-title">[ G O ]</h1>
+      <span class="doc-badge">DUELIST APPLICATION FILE</span>
     </div>
-    <canvas id="curve"></canvas>
-  </div>
-</main>
+
+    <!-- POWERS & WEAPONS (SPOILER) -->
+    <details class="doc-section">
+      <summary class="doc-section-title">💥 POWERS & WEAPONS</summary>
+      <div class="section-body">
+        <div class="doc-subsection-title">Gravity Fist (Passive)</div>
+        <p class="doc-text">
+          Go creates a small gravity field right around his fist whenever he swings a punch.
+        </p>
+        <ul class="doc-list">
+          <li><strong>Slower Punch = Bigger Boom:</strong> The slower and wider he swings, the more time his gravity field has to pull in air and crush it together in front of his fist.</li>
+          <li><strong>Explosive Release:</strong> The second his fist hits something, all that trapped, super-squeezed air bursts out at once, causing a huge explosion.</li>
+          <li><strong>Heavy Resistance:</strong> Pulling all that air together makes his fist feel super heavy to swing.</li>
+        </ul>
+        
+        <div class="doc-subsection-title">Combat Techniques</div>
+        <ul class="doc-list">
+          <li><strong>Quick Jab:</strong> Very fast punch, so there's no time to gather much air. Gives a quick, sharp, stingy pain to the enemy.</li>
+          <li><strong>Big Swing:</strong> A big, slow winding swing that sucks in a ton of air. Hits like a truck and causes a massive explosion.</li>
+          <li><strong>Hydrogen Fist (Theoretical):</strong> Never done before, but if he swings slow enough with enough power, he could squeeze the air hard enough to trigger a mini nuclear explosion.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- COMBAT PROFILE: STRENGTHS (SPOILER) -->
+    <details class="doc-section">
+      <summary class="doc-section-title">⚔️ STRENGTHS</summary>
+      <div class="section-body">
+        <ul class="doc-list">
+          <li><strong>Brawler / Infighter:</strong> Loves getting right in the enemy's face and beating them up close.</li>
+          <li><strong>Tanky:</strong> Takes hits well so he can walk right up to enemies and land his punches.</li>
+          <li><strong>Nimble Feet:</strong> Has super strong legs that let him dodge easily and move fast despite his heavy punches.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- COMBAT PROFILE: WEAKNESSES (SPOILER) -->
+    <details class="doc-section">
+      <summary class="doc-section-title">🛡️ WEAKNESSES</summary>
+      <div class="section-body">
+        <ul class="doc-list">
+          <li><strong>No Ranged Attacks:</strong> Can't do anything against enemies who stay far away and shoot from distance.</li>
+          <li><strong>Blast Recoil:</strong> The explosions affect him too. He has to plant his feet hard so he doesn't get blown back, which tires him out fast.</li>
+          <li><strong>Tunnel Vision:</strong> When he gets in close, he only focuses on what's right in front of him and loses sight of his sides.</li>
+        </ul>
+      </div>
+    </details>
+
+    <!-- ORIGIN & LORE (SPOILER) -->
+    <details class="doc-section">
+      <summary class="doc-section-title">👤 ORIGIN & LORE</summary>
+      <div class="section-body">
+        <p class="doc-text">
+          <strong>Why His Punch Attracts Gravity:</strong> Go's raw love for brawling is so intense that his stance and focus trigger a strange bio-electric reaction in his nervous system. When he winds up a punch with pure intent, his body creates a natural gravity field ahead of his fist—pulling air in and compressing it purely through his raw willpower and natural combat instinct.
+        </p>
+        <p class="doc-text">
+          <strong>Personality:</strong> A simple, straightforward guy. He doesn't care about the science or why his hands bend physics. If it lets him punch harder, he's happy with it!
+        </p>
+      </div>
+    </details>
+  </section>
+
+  <!-- INTERACTIVE SIMULATION (UNSPOILERED) -->
+  <main class="hud">
+    <header>
+      <h1>Fist Power-Speed Simulation</h1>
+      <span class="sys-status">MODEL // GO_01</span>
+    </header>
+
+    <div class="ctl">
+      <div class="ctl-head">
+        <span>SWING SPEED (v)</span>
+        <output id="vVal" style="color:var(--blue)"></output>
+      </div>
+      <input type="range" id="vSlider" min="0.1" max="16" step="0.1" value="16">
+    </div>
+
+    <div class="layout-grid">
+      <div class="view">
+        <div id="sim3d"></div>
+      </div>
+
+      <dl class="metrics">
+        <div class="metric-row" data-stat="weight"><dt>EFFECTIVE WEIGHT [G]</dt><dd id="wVal"></dd></div>
+        <div class="metric-row" data-stat="temp"><dt>COMPRESSION TEMP [°C]</dt><dd id="tempVal"></dd></div>
+        <div class="metric-row" data-stat="strain"><dt>TIDAL STRAIN [%]</dt><dd id="sVal"></dd></div>
+        <div class="metric-row highlight selected" data-stat="force"><dt>PEAK IMPACT FORCE [MN]</dt><dd id="fVal"></dd></div>
+      </dl>
+    </div>
+
+    <div class="damage-banner">
+      <strong style="color:var(--red)">IMPACT SCALE:</strong> <span id="desc"></span>
+    </div>
+
+    <div class="graph-container">
+      <div class="graph-head">
+        <span>STATISTIC CURVES (CLICK A STAT ABOVE TO HIGHLIGHT)</span>
+        <span id="activeStatLabel" style="color:var(--red)">FOCUS: PEAK IMPACT FORCE</span>
+      </div>
+      <canvas id="curve"></canvas>
+    </div>
+  </main>
+
+</div>
+
+<!-- FULLSCREEN IMAGE EXPAND MODAL -->
+<div class="image-modal" id="imageModal">
+  <span class="modal-close" id="modalClose">&times;</span>
+  <img src="https://i.imgur.com/59hhbSm.png" alt="Go Character Expanded Artwork" class="modal-content">
+</div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const vSlider = $('vSlider'), vVal =$('vVal'), gVal = $('gVal'), wVal =$('wVal'),
+  const vSlider = $('vSlider'), vVal =$('vVal'), wVal =$('wVal'),
         tempVal = $('tempVal'), sVal =$('sVal'), fVal = $('fVal'), desc =$('desc'),
         activeStatLabel = $('activeStatLabel'), host = $('sim3d'), canvas =$('curve'), ctx = canvas.getContext('2d');
+
+  // In-Page Image Expand Modal Logic
+  const bannerBtn = $('bannerBtn'), imageModal = $('imageModal'), modalClose =$('modalClose');
+
+  bannerBtn.addEventListener('click', () => {
+    imageModal.classList.add('active');
+  });
+
+  const closeModal = () => {
+    imageModal.classList.remove('active');
+  };
+
+  imageModal.addEventListener('click', closeModal);
+  modalClose.addEventListener('click', closeModal);
 
   const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
   const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
