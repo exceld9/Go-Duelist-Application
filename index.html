@@ -176,7 +176,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
       </div>
       <div class="banner" id="videoBtn" role="button" tabindex="0" aria-label="Expand video" data-label="Animation demo">
         <span class="wip-tag">DEMO WIP</span>
-        <video src="https://i.imgur.com/bgxgvLS.mp4" autoplay loop muted playsinline preload="metadata" poster="https://i.imgur.com/59hhbSm.png"></video>
+        <video src="https://i.imgur.com/CebC5Xw.mp4" autoplay loop muted playsinline preload="metadata" poster="https://i.imgur.com/59hhbSm.png"></video>
       </div>
     </div>
     <div class="title-row"><h1 class="name">[GO]</h1><span class="pill">Duelist application file</span></div>
@@ -293,7 +293,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   const closeTheater = () => { modal.classList.remove('active'); content.replaceChildren(); };
   const bind = (id, fn) => { const b = $(id); b.onclick = fn; b.onkeydown = e => e.key === 'Enter' && fn(); };
   bind('photoBtn', () => openTheater('img', 'https://i.imgur.com/59hhbSm.png', { alt: 'Go character expanded artwork' }));
-  bind('videoBtn', () => openTheater('video', 'https://i.imgur.com/bgxgvLS.mp4', { controls: true, autoplay: true, playsInline: true }));
+  bind('videoBtn', () => openTheater('video', 'https://i.imgur.com/CebC5Xw.mp4', { controls: true, autoplay: true, playsInline: true }));
   modal.onclick = e => e.target === modal && closeTheater();
   $('modalCloseBtn').onclick = closeTheater;
   addEventListener('keydown', e => e.key === 'Escape' && closeTheater());
