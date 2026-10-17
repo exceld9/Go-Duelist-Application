@@ -2,524 +2,315 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fist Power-Speed Simulation & Duelist Application</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Go – Fist Power-Speed Simulation</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
 :root{
-  --bg: #090d16;
-  --panel: #111827;
-  --panel-border: #1e293b;
-  --ink: #f8fafc;
-  --mute: #64748b;
-  --blue: #38bdf8;
-  --red: #f87171;
-  --amber: #fbbf24;
-  --green: #4ade80;
-  --purple: #c084fc;
+  color-scheme: dark;
+  --bg:#080c14; --panel:#111827; --panel2:#0b1220; --line:#1f2a3d; --ink:#f1f5f9; --text:#cbd5e1; --mute:#7b8aa3;
+  --blue:#38bdf8; --red:#f87171; --amber:#fbbf24; --green:#4ade80; --purple:#c084fc;
+  --mono:"JetBrains Mono",SFMono-Regular,Consolas,Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{
-  margin: 0;
-  padding: 24px 16px;
-  background: var(--bg);
-  color: var(--ink);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  font: 13px/1.4 "JetBrains Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  margin:0; min-height:100vh; color:var(--text); font:14px/1.55 var(--sans);
+  padding:20px 14px calc(28px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(900px 420px at 50% -120px,#13233d 0,transparent 70%),var(--bg);
 }
-.app-container{
-  width: 100%;
-  max-width: 960px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+.app{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 12px 32px rgba(0,0,0,.4)}
+h1,h2,h3,p,ul,dl,dd{margin:0}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* Integrated Media Gallery Grid */
+.media-gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.banner{position:relative;height:180px;border-radius:12px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--panel2);transition:border-color .2s ease, transform .2s ease}
+.banner:hover{border-color:var(--blue);transform:translateY(-2px)}
+.banner img, .banner video{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block;transition:transform .4s ease}
+.banner:hover img, .banner:hover video{transform:scale(1.03)}
+.banner::after{content:attr(data-label);position:absolute;right:10px;bottom:10px;font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(8,12,20,.8);color:var(--ink);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);pointer-events:none}
+
+/* DEMO WIP Overlay Tag */
+.wip-tag{position:absolute;top:10px;left:10px;font:700 10px var(--mono);color:var(--amber);background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);padding:3px 8px;border-radius:6px;backdrop-filter:blur(6px);pointer-events:none;z-index:2;letter-spacing:.05em}
+
+.title-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.name{font-size:2rem;line-height:1;font-weight:800;letter-spacing:.3em;color:var(--blue)}
+.badge{font-size:12px;color:var(--blue);border:1px solid rgba(56,189,248,.5);background:rgba(56,189,248,.08);padding:4px 12px;border-radius:99px}
+.sections{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+details{background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .2s}
+details.wide{grid-column:1/-1}
+details[open]{border-color:rgba(56,189,248,.45)}
+summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;padding:13px 14px;font-weight:700;color:var(--amber);min-height:48px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);transform:rotate(-45deg);transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+summary:hover{background:rgba(255,255,255,.03)}
+.body{padding:2px 14px 14px;border-top:1px dashed var(--line)}
+.body h3{font-size:.85rem;color:var(--red);margin:12px 0 6px}
+.body p{margin-top:10px}
+.body ul{padding-left:18px;margin-bottom:4px}
+.body li{margin-top:7px}
+.body strong{color:var(--ink)}
+
+/* Simulation */
+.hud{display:flex;flex-direction:column;gap:16px}
+.hud-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.hud-head h2{font-size:1.15rem;color:var(--ink)}
+.tag{font:11px var(--mono);color:var(--blue)}
+.speed{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.speed-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-weight:600}
+.speed-head output{font:700 1.3rem var(--mono);color:var(--blue)}
+
+/* Custom Gradient Slider */
+input[type=range]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:8px;
+  border-radius:99px;
+  background:linear-gradient(90deg, var(--red) 0%, var(--amber) 50%, var(--green) 100%);
+  cursor:pointer;
+  margin:10px 0;
+  outline:none;
 }
-.doc-panel, .hud{
-  width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--ink);
+  border:2px solid var(--panel);
+  box-shadow:0 0 8px rgba(0,0,0,0.5);
+  cursor:pointer;
+  transition:transform .15s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover{
+  transform:scale(1.15);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--ink);
+  border:2px solid var(--panel);
+  box-shadow:0 0 8px rgba(0,0,0,0.5);
+  cursor:pointer;
+  transition:transform .15s ease;
+}
+input[type=range]::-moz-range-thumb:hover{
+  transform:scale(1.15);
 }
 
-/* Wide Banner & Interactive Expand Styling */
-.banner-container {
-  width: 100%;
-  height: 220px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  margin-bottom: 20px;
-  position: relative;
-  cursor: zoom-in;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.banner-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(56, 189, 248, 0.25);
-}
-.banner-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 30%;
-  display: block;
-}
+.range-ends{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--mute)}
+.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.view{position:relative;height:320px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#050811;cursor:grab}
+.view:active{cursor:grabbing}
+#sim3d,#sim3d canvas{width:100%;height:100%;display:block}
+.metrics{display:flex;flex-direction:column;gap:8px}
+.metric{--c:var(--blue);display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:10px;cursor:pointer;user-select:none;transition:background .15s,border-color .15s}
+.metric:hover{background:#142036}
+.metric.selected{background:color-mix(in srgb,var(--c) 14%,var(--panel2));border-color:var(--c)}
+.metric[data-stat=temp]{--c:var(--purple)} .metric[data-stat=strain]{--c:var(--amber)} .metric[data-stat=force]{--c:var(--red)}
+.metric dt{font-size:12px;color:var(--mute)}
+.metric.selected dt{color:var(--ink)}
+.metric dd{font:700 .85rem var(--mono);color:var(--ink);text-align:right}
+.metric[data-stat=force] dd{color:var(--red);font-size:1rem}
+.note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;padding:11px 14px;font-size:13px}
 
-/* In-Page Image Modal Viewer */
-.image-modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(5, 8, 17, 0.92);
-  backdrop-filter: blur(8px);
-  justify-content: center;
-  align-items: center;
-  cursor: zoom-out;
-  padding: 20px;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-.image-modal.active {
-  display: flex;
-  opacity: 1;
-}
-.modal-content {
-  max-width: 92vw;
-  max-height: 92vh;
-  border-radius: 10px;
-  border: 1px solid var(--blue);
-  box-shadow: 0 0 30px rgba(56, 189, 248, 0.3);
-  object-fit: contain;
-}
-.modal-close {
-  position: absolute;
-  top: 20px;
-  right: 25px;
-  color: var(--ink);
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s ease;
-}
-.modal-close:hover {
-  color: var(--red);
-}
+/* Stage meter */
+.stage{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stage-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;font-size:12px;color:var(--mute)}
+.stage-top b{color:var(--red);font:700 12px var(--mono)}
+.bar{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-bottom:10px}
+.bar i{height:8px;border-radius:3px;background:#1a2538;transition:background .25s}
+.bar i.on{background:linear-gradient(90deg,var(--amber),var(--red))}
+.stage-name{font-weight:700;color:var(--ink)}
+.stage-text{font-size:13px}
 
-.profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 2px solid var(--blue);
-  padding-bottom: 12px;
-  margin-bottom: 20px;
-}
-.doc-title{
-  font-size: 1.8rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--blue);
-  margin: 0;
-}
-.doc-badge{
-  display: inline-block;
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid var(--blue);
-  color: var(--blue);
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
+.graph{background:#050811;border:1px solid var(--line);border-radius:12px;padding:12px}
+.graph-head{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);margin-bottom:6px}
+#curve{width:100%;height:170px;display:block}
 
-/* Collapsible Spoiler Styling */
-details.doc-section {
-  margin-bottom: 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  background: rgba(5, 8, 17, 0.4);
-  overflow: hidden;
-  transition: border-color 0.2s ease, background 0.2s ease;
-}
-details.doc-section[open] {
-  border-color: rgba(56, 189, 248, 0.4);
-  background: rgba(5, 8, 17, 0.8);
-}
-summary.doc-section-title {
-  font-size: 1.05rem;
-  color: var(--amber);
-  padding: 14px 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  list-style: none;
-}
-summary.doc-section-title::-webkit-details-marker {
-  display: none;
-}
-summary.doc-section-title::after {
-  content: '►';
-  font-size: 0.8rem;
-  color: var(--blue);
-  transition: transform 0.2s ease;
-}
-details[open] summary.doc-section-title::after {
-  transform: rotate(90deg);
-}
-summary.doc-section-title:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
+/* Theater Mode Modal */
+.modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,8,17,.95);backdrop-filter:blur(12px);justify-content:center;align-items:center;padding:20px;cursor:zoom-out}
+.modal.active{display:flex}
+.modal-content-wrapper{position:relative;max-width:92vw;max-height:88vh;display:flex;justify-content:center;align-items:center}
+.modal img, .modal video{max-width:92vw;max-height:88vh;border-radius:12px;border:1px solid var(--blue);box-shadow:0 0 40px rgba(56,189,248,.25);object-fit:contain}
+.modal-close{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:20px;font-size:28px;color:var(--ink);cursor:pointer;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border-radius:50%;border:1px solid rgba(255,255,255,.15)}
 
-.section-body {
-  padding: 0 16px 16px 16px;
-  border-top: 1px dashed var(--panel-border);
+@media(max-width:720px){
+  body{padding:12px 10px calc(24px + env(safe-area-inset-bottom,0px))}
+  .card{padding:14px;border-radius:14px}
+  .media-gallery{grid-template-columns:1fr;gap:10px}
+  .banner{height:150px}
+  .name{font-size:1.6rem}
+  .sections,.grid{grid-template-columns:1fr}
+  .view{height:260px}
+  .metrics{display:grid;grid-template-columns:1fr 1fr}
+  .metric{flex-direction:column;align-items:flex-start;gap:2px}
+  .metric dd{text-align:left}
+  .graph-head{flex-direction:column;gap:2px}
 }
-
-.doc-subsection-title{
-  font-size: 0.88rem;
-  color: var(--red);
-  margin: 14px 0 6px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.doc-text{
-  color: #cbd5e1;
-  line-height: 1.6;
-  margin: 0 0 8px 0;
-}
-.doc-list{
-  margin: 0 0 12px 0;
-  padding-left: 20px;
-  color: #cbd5e1;
-}
-.doc-list li{
-  margin-bottom: 6px;
-  line-height: 1.5;
-}
-.doc-list strong{
-  color: var(--ink);
-}
-
-/* Simulation HUD Styling */
-.hud{
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-header{
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  border-bottom: 1px solid var(--panel-border);
-  padding-bottom: 12px;
-}
-h1{
-  margin: 0;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.sys-status{ font-size: 0.75rem; color: var(--blue); letter-spacing: 0.08em; }
-
-.layout-grid{
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 20px;
-}
-@media(max-width: 768px){ 
-  .layout-grid{ grid-template-columns: 1fr; }
-  .banner-container{ height: 150px; }
-}
-
-.view{
-  position: relative;
-  height: 330px;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: #050811;
-  cursor: grab;
-}
-.view:active{ cursor: grabbing; }
-#sim3d,#sim3d canvas{ width: 100%; height: 100%; display: block; }
-
-.ctl{ display: flex; flex-direction: column; gap: 6px; }
-.ctl-head{ display: flex; justify-content: space-between; font-weight: 600; }
-input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
-
-.metrics{ display: flex; flex-direction: column; gap: 8px; }
-.metric-row{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-.metric-row:hover{ background: rgba(255,255,255,0.05); }
-.metric-row.selected{ border-color: var(--blue); background: rgba(56, 189, 248, 0.1); }
-.metric-row dt{ color: var(--mute); margin: 0; font-size: 0.78rem; }
-.metric-row dd{ margin: 0; font-weight: 600; font-size: 0.9rem; }
-
-.metric-row.highlight{
-  background: rgba(248, 113, 113, 0.08);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-}
-.metric-row.highlight.selected{ border-color: var(--red); background: rgba(248, 113, 113, 0.2); }
-.metric-row.highlight dt{ color: #fca5a5; font-weight: 600; }
-.metric-row.highlight dd{ color: var(--red); font-size: 1.05rem; }
-
-.stat-desc-box{
-  background: #050811;
-  border: 1px solid var(--panel-border);
-  border-left: 3px solid var(--blue);
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  color: #cbd5e1;
-  transition: border-color 0.2s ease;
-}
-
-.damage-banner{
-  background: #050811;
-  border: 1px solid var(--panel-border);
-  border-left: 3px solid var(--red);
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  color: #cbd5e1;
-}
-
-.graph-container{
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  padding: 14px;
-  background: #050811;
-}
-.graph-head{
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--mute);
-  margin-bottom: 6px;
-}
-#curve{ width: 100%; height: 160px; display: block; }
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<div class="app">
 
-<div class="app-container">
-
-  <!-- DUELIST APPLICATION DOCUMENT -->
-  <section class="doc-panel">
-    <!-- CLICKABLE HERO BANNER -->
-    <div class="banner-container" id="bannerBtn" title="Click to expand artwork">
-      <img src="https://i.imgur.com/59hhbSm.png" alt="Go Character Banner" class="banner-img">
+  <section class="card">
+    <div class="media-gallery">
+      <!-- PHOTO BANNER -->
+      <div class="banner" id="photoBannerBtn" role="button" tabindex="0" aria-label="Expand photo banner" data-label="🔍 Photo Artwork">
+        <img src="https://i.imgur.com/59hhbSm.png" alt="Go character photo banner">
+      </div>
+      <!-- VIDEO ANIMATION BANNER WITH DEMO WIP -->
+      <div class="banner" id="videoBannerBtn" role="button" tabindex="0" aria-label="Expand video banner theater mode" data-label="🎬 Animation Demo">
+        <span class="wip-tag">⚠️ DEMO WIP</span>
+        <video src="https://i.imgur.com/bgxgvLS.mp4" autoplay loop muted playsinline poster="https://i.imgur.com/59hhbSm.png"></video>
+      </div>
     </div>
 
-    <div class="profile-header">
-      <h1 class="doc-title">[ G O ]</h1>
-      <span class="doc-badge">DUELIST APPLICATION FILE</span>
+    <div class="title-row">
+      <h1 class="name">GO</h1>
+      <span class="badge">Duelist application file</span>
     </div>
-
-    <!-- POWERS & WEAPONS (SPOILER) -->
-    <details class="doc-section">
-      <summary class="doc-section-title">💥 POWERS & WEAPONS</summary>
-      <div class="section-body">
-        <div class="doc-subsection-title">Gravity Fist (Passive)</div>
-        <p class="doc-text">
-          Go creates a localized gravitational force field ahead of his fist whenever he swings a punch.
-        </p>
-        <ul class="doc-list">
-          <li><strong>Slower Punch = Bigger Boom:</strong> The slower and wider he swings, the more time his gravitational field has to continuously pressurize and crush surrounding air molecules together.</li>
-          <li><strong>Explosive Release:</strong> The second his fist hits a target, all that trapped, super-pressurized air collapses instantly and releases externally in a massive explosion.</li>
-          <li><strong>Heavy Resistance:</strong> Pressurizing all that air creates heavy resistance, making his fist feel super heavy to swing.</li>
-        </ul>
-        
-        <div class="doc-subsection-title">Combat Techniques</div>
-        <ul class="doc-list">
-          <li><strong>Quick Jab:</strong> Very fast punch, so there's no time to build up heavy air pressure. Delivers a quick, sharp, stingy pain to the enemy.</li>
-          <li><strong>Big Swing:</strong> A big, slow winding swing that heavily pressurizes a massive pocket of air. Hits like a truck and causes a massive explosion.</li>
-          <li><strong>Hydrogen Fist (Theoretical):</strong> Never done before, but if he swings slow enough with enough power, his gravity field could pressurize the air hard enough to trigger a mini nuclear explosion.</li>
-        </ul>
-      </div>
-    </details>
-
-    <!-- COMBAT PROFILE: STRENGTHS (SPOILER) -->
-    <details class="doc-section">
-      <summary class="doc-section-title">⚔️ STRENGTHS</summary>
-      <div class="section-body">
-        <ul class="doc-list">
-          <li><strong>Brawler / Infighter:</strong> Loves getting right in the enemy's face and beating them up close.</li>
-          <li><strong>Tanky:</strong> Takes hits well so he can walk right up to enemies and land his punches.</li>
-          <li><strong>Solid body:</strong> Has solid core and lower body strength that let him dodge easily and support his heavy punches.</li>
-        </ul>
-      </div>
-    </details>
-
-    <!-- COMBAT PROFILE: WEAKNESSES (SPOILER) -->
-    <details class="doc-section">
-      <summary class="doc-section-title">🛡️ WEAKNESSES</summary>
-      <div class="section-body">
-        <ul class="doc-list">
-          <li><strong>No Ranged Attacks:</strong> Can't do anything against enemies who stay far away and shoot from distance.</li>
-          <li><strong>Blast Recoil:</strong> The explosions affect him too. He has to plant his feet hard so he doesn't get blown back, which is stamina consuming.</li>
-          <li><strong>Tunnel Vision:</strong> When he gets in close, he only focuses on what's right in front of him and loses sight of his sides.</li>
-        </ul>
-      </div>
-    </details>
-
-    <!-- ORIGIN & LORE (SPOILER) -->
-    <details class="doc-section">
-      <summary class="doc-section-title">👤 ORIGIN & LORE</summary>
-      <div class="section-body">
-        <p class="doc-text">
-          <strong>Origin:</strong> Go's raw love for brawling is so intense that his stance and focus trigger a strange bio-electric reaction in his nervous system. When he winds up a punch with pure intent, his body creates a natural gravity field ahead of his fist—pressurizing air purely through his raw willpower and natural combat instinct.
-        </p>
-        <p class="doc-text">
-          <strong>Personality:</strong> A simple, straightforward guy. He doesn't care about the science or why his hands bend physics. If it lets him punch harder, he's happy with it!
-        </p>
-      </div>
-    </details>
+    <div class="sections" id="sections"></div>
   </section>
 
-  <!-- INTERACTIVE SIMULATION -->
-  <main class="hud">
-    <header>
-      <h1>Fist Power-Speed Simulation</h1>
-      <span class="sys-status">MODEL // GO_01</span>
-    </header>
+  <main class="card hud">
+    <div class="hud-head"><h2>Fist power-speed simulation</h2><span class="tag">MODEL // GO_01</span></div>
 
-    <div class="ctl">
-      <div class="ctl-head">
-        <span>SWING SPEED (v)</span>
-        <output id="vVal" style="color:var(--blue)"></output>
-      </div>
+    <div class="speed">
+      <div class="speed-head"><label for="vSlider">Swing speed</label><output id="vVal"></output></div>
       <input type="range" id="vSlider" min="0.1" max="16" step="0.1" value="16">
+      <div class="range-ends"><span>0.1 m/s · slow, heavy</span><span>16 m/s · fast, light</span></div>
     </div>
 
-    <div class="layout-grid">
-      <div class="view">
-        <div id="sim3d"></div>
-      </div>
-
-      <dl class="metrics">
-        <div class="metric-row" data-stat="weight"><dt>EFFECTIVE WEIGHT [G]</dt><dd id="wVal"></dd></div>
-        <div class="metric-row" data-stat="temp"><dt>COMPRESSION TEMP [°C]</dt><dd id="tempVal"></dd></div>
-        <div class="metric-row" data-stat="strain"><dt>TIDAL STRAIN [%]</dt><dd id="sVal"></dd></div>
-        <div class="metric-row highlight selected" data-stat="force"><dt>PEAK IMPACT FORCE [MN]</dt><dd id="fVal"></dd></div>
-      </dl>
+    <div class="grid">
+      <div class="view"><div id="sim3d"></div></div>
+      <dl class="metrics" id="metrics"></dl>
     </div>
 
-    <!-- DYNAMIC STAT DESCRIPTION BOX -->
-    <div class="stat-desc-box" id="statDescBox">
-      <strong id="statDescTitle" style="color:var(--red)">PEAK IMPACT FORCE:</strong> <span id="statDescText">Total kinetic and explosive force delivered directly to the target upon contact.</span>
+    <div class="note" id="statDescBox"><strong id="statDescTitle"></strong> <span id="statDescText"></span></div>
+
+    <div class="stage">
+      <div class="stage-top"><span>Impact scale</span><b id="stageNo"></b></div>
+      <div class="bar" id="stageBar"></div>
+      <div><span class="stage-name" id="stageName"></span> <span class="stage-text" id="stageText"></span></div>
     </div>
 
-    <div class="damage-banner">
-      <strong style="color:var(--red)">IMPACT SCALE:</strong> <span id="desc"></span>
-    </div>
-
-    <div class="graph-container">
-      <div class="graph-head">
-        <span>STATISTIC CURVES (CLICK A STAT ABOVE TO HIGHLIGHT)</span>
-        <span id="activeStatLabel" style="color:var(--red)">FOCUS: PEAK IMPACT FORCE</span>
-      </div>
+    <div class="graph">
+      <div class="graph-head"><span>Statistic curves · tap a stat to highlight</span><span id="activeStatLabel"></span></div>
       <canvas id="curve"></canvas>
     </div>
   </main>
-
 </div>
 
-<!-- FULLSCREEN IMAGE EXPAND MODAL -->
-<div class="image-modal" id="imageModal">
-  <span class="modal-close" id="modalClose">&times;</span>
-  <img src="https://i.imgur.com/59hhbSm.png" alt="Go Character Expanded Artwork" class="modal-content">
+<!-- Theater Mode Modal -->
+<div class="modal" id="theaterModal">
+  <div class="modal-close" id="modalCloseBtn">&times;</div>
+  <div class="modal-content-wrapper" id="modalContentWrapper"></div>
 </div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const vSlider = $('vSlider'), vVal =$('vVal'), wVal =$('wVal'),
-        tempVal = $('tempVal'), sVal =$('sVal'), fVal = $('fVal'), desc =$('desc'),
-        activeStatLabel = $('activeStatLabel'), host = $('sim3d'), canvas =$('curve'), ctx = canvas.getContext('2d'),
-        statDescBox = $('statDescBox'), statDescTitle = $('statDescTitle'), statDescText =$('statDescText');
-
-  // In-Page Image Expand Modal Logic
-  const bannerBtn = $('bannerBtn'), imageModal = $('imageModal'), modalClose =$('modalClose');
-
-  bannerBtn.addEventListener('click', () => {
-    imageModal.classList.add('active');
-  });
-
-  const closeModal = () => {
-    imageModal.classList.remove('active');
-  };
-
-  imageModal.addEventListener('click', closeModal);
-  modalClose.addEventListener('click', closeModal);
-
-  const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
-  const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
-  const DPR = Math.min(window.devicePixelRatio || 1, 2);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-  let activeStat = 'force'; // 'weight', 'temp', 'strain', 'force'
+  // ───────── Profile content (data-driven) ─────────
+  const li = (t, d) => `<li><strong>${t}:</strong> ${d}</li>`;
+  const DOC = [
+    ['💥', 'Powers & weapons', 'wide', `
+      <h3>Gravity Fist (Passive)</h3>
+      <p>Go creates a localized gravitational force field ahead of his fist whenever he swings a punch.</p>
+      <ul>${li('Slower Punch = Bigger Boom', 'The slower and wider he swings, the more time his gravitational field has to continuously pressurize and crush surrounding air molecules together.')}
+      ${li('Explosive Release', 'The second his fist hits a target, all that trapped, super-pressurized air collapses instantly and releases externally in a massive explosion.')}
+      ${li('Heavy Resistance', 'Pressurizing all that air creates heavy resistance, making his fist feel super heavy to swing.')}</ul>
+      <h3>Combat Techniques</h3>
+      <ul>${li('Quick Jab', "Very fast punch, so there's no time to build up heavy air pressure. Delivers a quick, sharp, stingy pain to the enemy.")}
+      ${li('Big Swing', 'A big, slow winding swing that heavily pressurizes a massive pocket of air. Hits like a truck and causes a massive explosion.')}
+      ${li('Hydrogen Fist (Theoretical)', 'Never done before, but if he swings slow enough with enough power, his gravity field could pressurize the air hard enough to trigger a mini nuclear explosion.')}</ul>`],
+    ['⚔️', 'Strengths', '', `<ul>
+      ${li('Brawler / Infighter', "Loves getting right in the enemy's face and beating them up close.")}
+      ${li('Tanky', 'Takes hits well so he can walk right up to enemies and land his punches.')}
+      ${li('Nimble Feet', 'Has super strong legs that let him dodge easily and move fast despite his heavy punches.')}</ul>`],
+    ['🛡️', 'Weaknesses', '', `<ul>
+      ${li('No Ranged Attacks', "Can't do anything against enemies who stay far away and shoot from distance.")}
+      ${li('Blast Recoil', "The explosions affect him too. He has to plant his feet hard so he doesn't get blown back, which tires him out fast.")}
+      ${li('Tunnel Vision', 'When he gets in close, he only focuses on what\'s right in front of him and loses sight of his sides.')}</ul>`],
+    ['👤', 'Origin & lore', 'wide', `
+      <p><strong>Power origin:</strong> Go's raw love for brawling is so intense that his stance and focus trigger a strange bio-electric reaction in his nervous system. When he winds up a punch with pure intent, his body creates a natural gravity field ahead of his fist—pressurizing air purely through his raw willpower and natural combat instinct.</p>
+      <p><strong>Personality:</strong> A simple, straightforward guy. He doesn't care about the science or why his hands bend physics. If it lets him punch harder, he's happy with it!</p>`]
+  ];
+  $('sections').innerHTML = DOC.map(([i, t, c, b]) => `<details class="${c}"><summary>${i} ${t}</summary><div class="body">${b}</div></details>`).join('');
 
-  const STAT_DESCRIPTIONS = {
-    weight: {
-      title: 'EFFECTIVE WEIGHT',
-      color: 'var(--blue)',
-      text: "Apparent mass of Go's fist during swing, escalating exponentially as localized gravity pressurizes surrounding matter."
-    },
-    temp: {
-      title: 'COMPRESSION TEMP',
-      color: 'var(--purple)',
-      text: "Peak thermodynamic temperature generated by extreme atmospheric molecule pressurization ahead of the strike."
-    },
-    strain: {
-      title: 'TIDAL STRAIN',
-      color: 'var(--amber)',
-      text: "Structural and physical strain exerted on Go's body caused by the opposing gravitational pull and accumulated fist weight."
-    },
-    force: {
-      title: 'PEAK IMPACT FORCE',
-      color: 'var(--red)',
-      text: "Total kinetic and explosive force delivered directly to the target upon contact."
-    }
+  // ───────── Stats, tiers, descriptions ─────────
+  const STATS = {
+    weight: { title: 'Effective weight', color: '--blue', label: 'EFFECTIVE WEIGHT [G]', id: 'wVal',
+      text: "Apparent mass of Go's fist during swing, escalating exponentially as localized gravity pressurizes surrounding matter." },
+    temp: { title: 'Compression temp', color: '--purple', label: 'COMPRESSION TEMP [°C]', id: 'tempVal',
+      text: 'Peak thermodynamic temperature generated by extreme atmospheric molecule pressurization ahead of the strike.' },
+    strain: { title: 'Tidal strain', color: '--amber', label: 'TIDAL STRAIN [%]', id: 'sVal',
+      text: "Structural and physical strain exerted on Go's body caused by the opposing gravitational pull and accumulated fist weight." },
+    force: { title: 'Peak impact force', color: '--red', label: 'PEAK IMPACT FORCE [MN]', id: 'fVal',
+      text: 'Total kinetic and explosive force delivered directly to the target upon contact.' }
   };
+  $('metrics').innerHTML = Object.entries(STATS).map(([k, s]) => `<div class="metric" data-stat="${k}" role="button" tabindex="0"><dt>${s.label.replace(/ \[.*/, '')}</dt><dd id="${s.id}"></dd></div>`).join('');
+  $('stageBar').innerHTML = '<i></i>'.repeat(8);
 
-  // Multi-Stage Damage Tiers (8 Stages)
   const TIERS = [
     [14.0, 'Stage 1 — Light Sparring Jab: Safe velocity. Zero recoil or structural strain.'],
     [11.0, 'Stage 2 — Heavy Boxing Punch: Shatters jawbones and causes severe concussive recoil.'],
     [8.0,  'Stage 3 — Vehicle Collision Level: Equivalent to a 60 km/h car crash. Demolishes brick walls.'],
     [5.0,  'Stage 4 — Freight Train Impact: Sufficient kinetic force to crush reinforced concrete barriers.'],
     [3.0,  'Stage 5 — Bunker Buster Shell: Tremendous shockwave. Collapses underground concrete fortifications.'],
-    [1.5,  'Stage 6 — Seismic Shockwave: Demolishes multi-story buildings; extreme tidal strain on Go\'s joints.'],
+    [1.5,  "Stage 6 — Seismic Shockwave: Demolishes multi-story buildings; extreme tidal strain on Go's joints."],
     [0.5,  'Stage 7 — Meteorite Impact: Creates massive surface craters; extreme air displacement & localized heating.'],
     [0.0,  'Stage 8 — Core Fusion Ignition: Micro-blackhole gravitational field. Triggers plasma nuclear fusion.']
   ];
+
+  const vSlider = $('vSlider'), host = $('sim3d'), canvas =$('curve'), ctx = canvas.getContext('2d');
+
+  // ───────── Theater Mode Modal Logic ─────────
+  const modal = $('theaterModal'), wrapper = $('modalContentWrapper'), closeBtn =$('modalCloseBtn');
+  
+  const openTheater = (type, src) => {
+    wrapper.innerHTML = '';
+    if (type === 'image') {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = 'Go character expanded artwork';
+      wrapper.appendChild(img);
+    } else if (type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = src;
+      vid.controls = true;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      wrapper.appendChild(vid);
+    }
+    modal.classList.add('active');
+  };
+
+  const closeTheater = () => {
+    modal.classList.remove('active');
+    wrapper.innerHTML = '';
+  };
+
+  $('photoBannerBtn').addEventListener('click', () => openTheater('image', 'https://i.imgur.com/59hhbSm.png'));$('videoBannerBtn').addEventListener('click', () => openTheater('video', 'https://i.imgur.com/bgxgvLS.mp4'));
+  closeBtn.addEventListener('click', closeTheater);
+  modal.addEventListener('click', e => { if (e.target === modal) closeTheater(); });
+  addEventListener('keydown', e => e.key === 'Escape' && closeTheater());
+
+  const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
+  const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let activeStat = 'force';
 
   // ───────── Scene ─────────
   const scene = new THREE.Scene();
@@ -538,7 +329,7 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
   scene.add(new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.8));
   const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 4); scene.add(sun);
 
-  // ───────── Restored 3D 1-Meter Distance Ruler ─────────
+  // ───────── 3D 1-Meter Distance Ruler ─────────
   const FLOOR = -0.9, START = -2.4, PATH = 4.0, IMPACT = START + PATH; // 4 scene units = 1 m
   const grid = new THREE.GridHelper(10, 20, 0x1e293b, 0x0f172a); grid.position.y = FLOOR; scene.add(grid);
 
@@ -570,7 +361,7 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
 
   for (let r = 0, i = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++, i++) {
     const y = (r - ROWS / 2 + 0.5) * BH, z = (c - COLS / 2 + 0.5) * BD;
-    cell.push([y, z]); 
+    cell.push([y, z]);
     const p = Math.exp(-(y * y + z * z) / 0.5); prof[i] = p;
 
     debrisVel.push({
@@ -604,11 +395,11 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
         scatterAmount * debrisVel[i].ry,
         scatterAmount * debrisVel[i].rz
       );
-      dummy.updateMatrix(); 
+      dummy.updateMatrix();
       wall.setMatrixAt(i, dummy.matrix);
       wall.setColorAt(i, colormap(load * (0.08 + 0.92 * stress) * prof[i] + (1 - load) * stress * prof[i], tmp).lerp(tmp.clone().set(0x1e293b), 1 - Math.min(1, Math.max(load, stress))));
     }
-    wall.instanceMatrix.needsUpdate = true; 
+    wall.instanceMatrix.needsUpdate = true;
     wall.instanceColor.needsUpdate = true;
   }
 
@@ -648,7 +439,7 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
     const v = parseFloat(vSlider.value);
 
     if (hold <= 0) {
-      x = Math.min(IMPACT - 0.4, x + (0.5 + ((v - V_MIN) / SPAN) * 12) * dt);
+      x = Math.min(IMPACT - 0.4, x + (PATH * v) * dt);
       if (x >= IMPACT - 0.4) { hold = HOLD; forceArrow.visible = true; }
     } else {
       hold -= dt;
@@ -665,16 +456,12 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
     renderer.render(scene, camera);
   }
 
-  // ───────── Multi-Curve Interactive Graph ─────────
+  // ───────── Multi-Curve Graph ─────────
   function getCurveVal(stat, v) {
     if (stat === 'force') return slow(v, 2.5);
-    if (stat === 'weight') return slow(v, 2.2);
-    if (stat === 'strain') return slow(v, 2.2);
-    if (stat === 'temp') {
-      if (v >= 7.0) return Math.pow((16 - v) / 9, 2) * 0.1;
-      return 0.1 + Math.min(0.9, (7.0 - v) / 6.9);
-    }
-    return 0;
+    if (stat === 'weight' || stat === 'strain') return slow(v, 2.2);
+    if (v >= 7.0) return Math.pow((16 - v) / 9, 2) * 0.1; // temp
+    return 0.1 + Math.min(0.9, (7.0 - v) / 6.9);
   }
 
   function drawGraph() {
@@ -684,84 +471,50 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
     ctx.clearRect(0, 0, w, h);
     ctx.font = `${9 * d}px Monospace`; ctx.lineWidth = d;
 
-    // Grid Lines
     for (let i = 0; i <= 4; i++) {
-      const f = i / 4, y = py(f);
-      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.stroke();
+      const f = i / 4, y = py(f), xx = px(f);
+      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(w - R, y); ctx.moveTo(xx, T); ctx.lineTo(xx, h - B); ctx.stroke();
       ctx.fillStyle = '#64748b'; ctx.textAlign = 'right'; ctx.fillText((f * 100).toFixed(0) + '%', L - 6 * d, y + 3 * d);
-    }
-    for (let i = 0; i <= 4; i++) {
-      const f = i / 4, xx = px(f);
-      ctx.strokeStyle = '#1e293b'; ctx.beginPath(); ctx.moveTo(xx, T); ctx.lineTo(xx, h - B); ctx.stroke();
-      ctx.fillStyle = '#64748b'; ctx.textAlign = 'center'; ctx.fillText((V_MIN + f * SPAN).toFixed(0) + 'm/s', xx, h - B + 14 * d);
+      ctx.textAlign = 'center'; ctx.fillText((V_MIN + f * SPAN).toFixed(0) + 'm/s', xx, h - B + 14 * d);
     }
 
-    const curves = [
-      { id: 'weight', color: css('--blue') },
-      { id: 'temp', color: css('--purple') },
-      { id: 'strain', color: css('--amber') },
-      { id: 'force', color: css('--red') }
-    ];
-
-    // Draw non-selected curves first
-    curves.forEach(c => {
-      if (c.id === activeStat) return;
+    // Inactive curves first, active (highlighted) curve last
+    const ids = Object.keys(STATS).filter(k => k !== activeStat).concat(activeStat);
+    ids.forEach(id => {
+      const on = id === activeStat, col = css(STATS[id].color);
       ctx.save();
       ctx.beginPath(); ctx.rect(L, T, w - L - R, h - T - B); ctx.clip();
-      ctx.lineWidth = 1 * d; ctx.strokeStyle = c.color; ctx.globalAlpha = 0.25;
+      ctx.lineWidth = (on ? 2.5 : 1) * d; ctx.strokeStyle = col; ctx.globalAlpha = on ? 1 : 0.25;
       const path = new Path2D();
       for (let i = 0; i <= 100; i++) {
-        const vx = V_MIN + (i / 100) * SPAN;
-        const xPos = px(i / 100), yPos = py(getCurveVal(c.id, vx));
+        const xPos = px(i / 100), yPos = py(getCurveVal(id, V_MIN + (i / 100) * SPAN));
         i ? path.lineTo(xPos, yPos) : path.moveTo(xPos, yPos);
       }
       ctx.stroke(path);
       ctx.restore();
+      if (on) { // current-speed marker
+        ctx.fillStyle = '#050811'; ctx.strokeStyle = col; ctx.lineWidth = 2.5 * d;
+        ctx.beginPath(); ctx.arc(px((v - V_MIN) / SPAN), py(getCurveVal(id, v)), 4.5 * d, 0, 7); ctx.fill(); ctx.stroke();
+      }
     });
-
-    // Draw active highlighted curve
-    const activeObj = curves.find(c => c.id === activeStat);
-    if (activeObj) {
-      ctx.save();
-      ctx.beginPath(); ctx.rect(L, T, w - L - R, h - T - B); ctx.clip();
-      ctx.lineWidth = 2.5 * d; ctx.strokeStyle = activeObj.color; ctx.globalAlpha = 1.0;
-      const path = new Path2D();
-      for (let i = 0; i <= 100; i++) {
-        const vx = V_MIN + (i / 100) * SPAN;
-        const xPos = px(i / 100), yPos = py(getCurveVal(activeObj.id, vx));
-        i ? path.lineTo(xPos, yPos) : path.moveTo(xPos, yPos);
-      }
-      ctx.stroke(path);
-      ctx.restore();
-
-      // Current setting marker on active curve
-      const cx = px((v - V_MIN) / SPAN), cy = py(getCurveVal(activeObj.id, v));
-      ctx.fillStyle = '#050811'; ctx.strokeStyle = activeObj.color; ctx.lineWidth = 2.5 * d;
-      ctx.beginPath(); ctx.arc(cx, cy, 4.5 * d, 0, 7); ctx.fill(); ctx.stroke();
-    }
   }
 
-  // Stats Selection Event Listeners & Description Update
-  document.querySelectorAll('.metric-row').forEach(row => {
-    row.addEventListener('click', () => {
-      document.querySelectorAll('.metric-row').forEach(r => r.classList.remove('selected'));
-      row.classList.add('selected');
-      activeStat = row.dataset.stat;
-      
-      const statData = STAT_DESCRIPTIONS[activeStat];
-      activeStatLabel.textContent = `FOCUS: ${statData.title}`;
-      activeStatLabel.style.color = css(statData.color);
-
-      statDescTitle.textContent = `${statData.title}:`;
-      statDescTitle.style.color = css(statData.color);
-      statDescText.textContent = statData.text;
-      statDescBox.style.borderLeftColor = css(statData.color);
-
-      drawGraph();
-    });
+  // Stat selection
+  function selectStat(k) {
+    activeStat = k;
+    const s = STATS[k], col = css(s.color);
+    document.querySelectorAll('.metric').forEach(r => r.classList.toggle('selected', r.dataset.stat === k));
+    $('activeStatLabel').textContent = `Focus: ${s.title}`; $('activeStatLabel').style.color = col;
+    $('statDescTitle').textContent = `${s.title}:`; $('statDescTitle').style.color = col;
+    $('statDescText').textContent = s.text; $('statDescBox').style.borderLeftColor = col;
+    drawGraph();
+  }
+  document.querySelectorAll('.metric').forEach(r => {
+    r.addEventListener('click', () => selectStat(r.dataset.stat));
+    r.addEventListener('keydown', e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), selectStat(r.dataset.stat)));
   });
 
-  // Update Stats
+  // Update stats
   const fmt = n => n.toLocaleString('en-US');
   function update() {
     const v = parseFloat(vSlider.value);
@@ -769,29 +522,20 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
     const strain = Math.round(g / 5);
     const F = 3200 + (10500000 - 3200) * slow(v, 2.5);
 
-    let tempC;
-    if (v >= 7.0) {
-      tempC = Math.round(25 + (75 * Math.pow((16 - v) / 9, 2)));
-    } else {
-      const expFactor = Math.pow(10, (7.0 - v) * (5.176 / 6.9));
-      tempC = Math.round(100 * expFactor);
-    }
+    const tempC = v >= 7.0 ? Math.round(25 + 75 * Math.pow((16 - v) / 9, 2))
+                           : Math.round(100 * Math.pow(10, (7.0 - v) * (5.176 / 6.9)));
+    const formatTemp = t => t >= 1e6 ? `~${(t / 1e6).toFixed(1)}M °C` : t >= 1e3 ? `~${fmt(t)} °C` : `~${t} °C`;
 
-    const formatTemp = t => {
-      if (t >= 1e6) return `~${(t / 1e6).toFixed(1)}M °C`;
-      if (t >= 1e3) return `~${fmt(t)} °C`;
-      return `~${t} °C`;
-    };
+    $('vVal').textContent = v.toFixed(1) + ' m/s';$('wVal').textContent = fmt(MASS * g) + ' kg (' + fmt(g) + ' G)';
+    $('tempVal').textContent = formatTemp(tempC);$('fVal').textContent = F >= 1e6 ? (F / 1e6).toFixed(2) + ' MN' : (F / 1e3).toFixed(1) + ' kN';
 
-    vVal.textContent = v.toFixed(1) + ' m/s';
-    wVal.textContent = fmt(MASS * g) + ' kg (' + fmt(g) + ' G)';
-    tempVal.textContent = formatTemp(tempC);
-    fVal.textContent = F >= 1e6 ? (F / 1e6).toFixed(2) + ' MN' : (F / 1e3).toFixed(1) + ' kN';
+    const [lab, col] = strain >= 75 ? ['CRITICAL', css('--red')] : strain >= 35 ? ['HIGH STRAIN', css('--amber')] : ['SAFE', css('--green')];
+    $('sVal').textContent = `${strain}% [${lab}]`; $('sVal').style.color = col;
 
-    const [label, col] = strain >= 75 ? ['CRITICAL', css('--red')] : strain >= 35 ? ['HIGH STRAIN', css('--amber')] : ['SAFE', css('--green')];
-    sVal.textContent = `${strain}% [${label}]`; sVal.style.color = col;
-
-    desc.textContent = TIERS.find(t => v >= t[0])[1];
+    const idx = TIERS.findIndex(t => v >= t[0]), [head, body] = TIERS[idx][1].split(': ');
+    $('stageNo').textContent = `Stage ${idx + 1} of ${TIERS.length}`;
+    $('stageName').textContent = head.replace(/^Stage \d+ — /, '') + ':';$('stageText').textContent = body;
+    [...$('stageBar').children].forEach((b, i) => b.classList.toggle('on', i <= idx));
 
     stress = slow(v, 2.5);
     fieldOpacity = Math.min(1, g / 500) * 0.28;
@@ -801,7 +545,7 @@ input[type=range]{ width: 100%; accent-color: var(--blue); cursor: pointer; }
 
   vSlider.addEventListener('input', () => { update(); if (hold <= 0) reset(); });
 
-  reset(); update(); resize();
+  selectStat('force'); reset(); update(); resize();
   requestAnimationFrame(frame);
 })();
 </script>
