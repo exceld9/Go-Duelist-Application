@@ -21,7 +21,7 @@ body{margin:0;min-height:100vh;color:var(--text);font:14px/1.55 var(--sans);padd
 h1,h2,h3,p,ul,dl,dd{margin:0}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 
-/* Ambient background: two soft gradients drifting (transform only, no blur filter) */
+/* Ambient background */
 body::before{content:"";position:fixed;inset:-25%;z-index:-1;pointer-events:none;will-change:transform;
   background:radial-gradient(40% 35% at 25% 20%,rgba(56,189,248,.16),transparent 70%),radial-gradient(35% 30% at 78% 70%,rgba(192,132,252,.13),transparent 70%);
   animation:drift 24s ease-in-out infinite alternate}
@@ -31,17 +31,20 @@ body::before{content:"";position:fixed;inset:-25%;z-index:-1;pointer-events:none
 .pill{font-size:12px;color:var(--blue);border:1px solid rgba(56,189,248,.5);background:rgba(56,189,248,.08);padding:4px 14px;border-radius:99px}
 .box{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
 
-/* Motion: transform/opacity only; disabled for reduced-motion */
+/* Motion */
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes blink{50%{opacity:.45}}
 @keyframes ping{to{transform:scale(2.8);opacity:0}}
 @keyframes sweep{to{transform:translateX(120%)}}
 @keyframes drift{to{transform:translate3d(6%,5%,0) scale(1.12)}}
+@keyframes flowReveal{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 12px rgba(248,113,113,.2)}50%{box-shadow:0 0 24px rgba(248,113,113,.5)}}
+
 .reveal{opacity:0}
 .reveal.in{animation:rise .65s var(--ease) both;animation-delay:var(--d,0s)}
 details[open] .body{animation:rise .3s ease both}
 
-/* Media */
+/* Media Gallery */
 .media-gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
 .banner{position:relative;height:180px;border-radius:12px;overflow:hidden;border:1px solid var(--line);cursor:pointer;background:var(--panel2);transition:border-color .2s,transform .25s var(--ease),box-shadow .25s}
 .banner:hover{border-color:var(--blue);transform:translateY(-3px);box-shadow:0 10px 26px rgba(56,189,248,.2)}
@@ -52,27 +55,40 @@ details[open] .body{animation:rise .3s ease both}
 .banner::after{content:attr(data-label);position:absolute;right:10px;bottom:10px;z-index:2;font-size:11px;padding:3px 10px;border-radius:99px;background:rgba(8,12,20,.8);color:var(--ink);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);pointer-events:none}
 .wip-tag{position:absolute;top:10px;left:10px;z-index:2;font:700 10px var(--mono);color:var(--amber);background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.4);padding:3px 8px;border-radius:6px;backdrop-filter:blur(6px);pointer-events:none;letter-spacing:.06em}
 
-/* Profile */
+/* Profile Grid & Accordions */
 .title-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:18px;text-align:center}
 .name{font-size:2.2rem;line-height:1;font-weight:800;letter-spacing:.3em;padding-left:.3em;color:#fff;text-shadow:0 0 14px rgba(255,255,255,.35)}
-.sections{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-details{background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
+.sections{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+details{background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .25s,box-shadow .25s;display:flex;flex-direction:column}
 details.wide{grid-column:1/-1}
-details[open]{border-color:color-mix(in srgb,var(--dot) 55%,transparent);box-shadow:0 0 22px color-mix(in srgb,var(--dot) 12%,transparent)}
+details[open]{align-self:stretch;border-color:color-mix(in srgb,var(--dot) 55%,transparent);box-shadow:0 0 22px color-mix(in srgb,var(--dot) 12%,transparent)}
 summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;gap:11px;padding:13px 14px;font-weight:700;color:var(--ink);min-height:48px;transition:background .2s}
 summary::-webkit-details-marker{display:none}
 summary::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--dot);box-shadow:0 0 10px var(--dot);flex:none}
 summary::after{content:"";margin-left:auto;width:8px;height:8px;border:solid var(--mute);border-width:0 2px 2px 0;transform:rotate(-45deg);transition:transform .25s var(--ease),border-color .2s}
 details[open] summary::after{transform:rotate(45deg);border-color:var(--dot)}
 summary:hover{background:rgba(255,255,255,.035)}
-.body{padding:2px 14px 14px;border-top:1px dashed var(--line)}
-.body h3{font-size:.85rem;color:var(--red);margin:12px 0 6px}
-.body p{margin-top:10px}
-.body ul{padding-left:18px}
-.body li{margin-top:7px}
+.body{padding:12px 14px 16px;border-top:1px dashed var(--line);flex:1}
+.body h3{font-size:.85rem;color:var(--red);margin:14px 0 6px}
+.body h3:first-child{margin-top:0}
+.body p{margin-top:8px;line-height:1.6}
+.body ul{padding-left:18px;margin-top:6px}
+.body li{margin-top:7px;line-height:1.55}
 .body strong{color:var(--ink)}
 
-/* Simulation */
+/* Visual Sequence Pipeline Component */
+.flow-container{margin:8px 0 18px;padding:16px;background:linear-gradient(135deg,rgba(15,22,38,.9),rgba(20,29,48,.95));border:1px solid rgba(248,113,113,.25);border-radius:14px;box-shadow:inset 0 0 20px rgba(0,0,0,.3)}
+.flow-pipeline{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1.2fr;align-items:center;gap:8px}
+.flow-step{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 10px;text-align:center;display:flex;flex-direction:column;justify-content:center;min-height:72px;opacity:0}
+.flow-step.active-anim{animation:flowReveal .5s var(--ease) forwards;animation-delay:var(--fd,0s)}
+.flow-step.result-step{background:linear-gradient(135deg,rgba(248,113,113,.15),rgba(251,191,36,.1));border-color:rgba(248,113,113,.5);animation:flowReveal .5s var(--ease) forwards,pulseGlow 3s ease-in-out infinite;animation-delay:var(--fd,0s),.6s}
+.flow-step .step-title{font:700 12px var(--sans);color:var(--ink);margin-bottom:3px}
+.flow-step.result-step .step-title{color:var(--red);font-size:13px}
+.flow-step .step-sub{font-size:11px;color:var(--mute);line-height:1.3}
+.flow-arrow{font-size:14px;color:var(--amber);opacity:0;text-shadow:0 0 8px currentColor;display:flex;align-items:center;justify-content:center}
+.flow-arrow.active-anim{animation:flowReveal .4s var(--ease) forwards;animation-delay:var(--fd,0s)}
+
+/* Simulation Section */
 .hud{display:flex;flex-direction:column;gap:16px}
 .hud-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .hud-head h2{font-size:1.15rem;color:var(--ink)}
@@ -82,7 +98,7 @@ summary:hover{background:rgba(255,255,255,.035)}
 .speed-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-weight:600}
 .speed-head output{font:700 1.4rem var(--mono);color:var(--blue);text-shadow:0 0 16px currentColor}
 
-/* Slider: gradient stays fixed, the unfilled part is covered; the thumb is never masked, so it always sits on top */
+/* Slider Controls */
 input[type=range]{--f:1;-webkit-appearance:none;appearance:none;width:100%;height:24px;margin:6px 0;background:none;cursor:pointer;outline:none}
 input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:99px;
   background:linear-gradient(90deg,transparent calc(11px + (100% - 22px)*var(--f)),#1f2a3d 0),linear-gradient(90deg,#f87171,#fbbf24 50%,#4ade80)}
@@ -110,7 +126,6 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 .metric[data-stat=force] dd{color:var(--red);font-size:1rem}
 .note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:10px;padding:11px 14px;font-size:13px;transition:border-color .3s}
 
-/* Impact scale: --heat (0-1) drives the inner glow */
 .stage{--heat:0;position:relative;overflow:hidden}
 .stage::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 34px rgba(248,113,113,.6);opacity:var(--heat);transition:opacity .35s}
 .stage-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;font-size:12px;color:var(--mute)}
@@ -125,7 +140,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 .graph-head{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);margin-bottom:6px}
 #curve{width:100%;height:170px;display:block}
 
-/* Usability additions */
+/* Usability */
 .metric dd,.speed-head output,.stage-top b,.dock output{font-variant-numeric:tabular-nums}
 .pick{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12px;color:var(--mute)}
 .pick select{flex:1;min-width:0;min-height:40px;font:600 13px var(--sans);color:var(--ink);background:rgba(255,255,255,.04) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%237b8aa3' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center;border:1px solid var(--line);border-radius:10px;padding:0 36px 0 12px;-webkit-appearance:none;appearance:none;cursor:pointer;transition:border-color .2s}
@@ -147,7 +162,53 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 .modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,8,17,.95);backdrop-filter:blur(12px);justify-content:center;align-items:center;padding:20px;cursor:zoom-out}
 .modal.active{display:flex;animation:rise .25s ease both}
 .modal img,.modal video{max-width:92vw;max-height:88vh;border-radius:12px;border:1px solid var(--blue);box-shadow:0 0 40px rgba(56,189,248,.25);object-fit:contain}
+.modal-close svg{display:block}
 .modal-close{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:20px;font-size:28px;color:var(--ink);cursor:pointer;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border-radius:50%;border:1px solid rgba(255,255,255,.15)}
+
+/* Jump-to-simulation buttons */
+.flow-cta{display:flex;justify-content:center;margin-top:16px}
+.sim-link{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 22px;font:700 13px var(--sans);color:#1a0b0b;background:linear-gradient(135deg,var(--red),var(--amber));border:0;border-radius:99px;cursor:pointer;box-shadow:0 6px 20px rgba(248,113,113,.35);transition:transform .2s var(--ease),box-shadow .2s}
+.sim-link:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(248,113,113,.5)}
+#simulation{scroll-margin-top:16px}
+.hud.spot::after{content:"";position:absolute;inset:-2px;border:2px solid var(--red);border-radius:inherit;pointer-events:none;animation:spotRing 1.4s ease-out 2 both}
+@keyframes spotRing{0%{opacity:.9;box-shadow:0 0 0 0 rgba(248,113,113,.6)}100%{opacity:0;box-shadow:0 0 0 16px rgba(248,113,113,0)}}
+
+/* Fan art collage */
+.fan-sub{margin:6px 0 16px;color:var(--mute);font-size:13px}
+#modalContent{display:flex;flex-direction:column;align-items:center;gap:14px}
+.credit{font:600 14px var(--sans);color:var(--text);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);padding:6px 18px;border-radius:99px}
+.credit b{color:var(--blue)}
+
+/* Fan art slideshow banner */
+.slider{position:relative;height:clamp(140px,26vw,220px);margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--panel2);cursor:pointer;transition:border-color .2s,box-shadow .25s}
+.slider:hover{border-color:var(--blue);box-shadow:0 10px 26px rgba(56,189,248,.2)}
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.slide.on{opacity:1}
+.slide img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 30%}
+.sl-nav{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font:400 22px/1 var(--sans);color:var(--ink);background:rgba(8,12,20,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:50%;cursor:pointer;transition:background .2s,border-color .2s}
+.sl-nav:hover{background:rgba(56,189,248,.25);border-color:var(--blue)}
+.sl-nav.prev{left:10px}.sl-nav.next{right:10px}
+.sl-credit,.sl-open{position:absolute;z-index:3;font:600 11px var(--sans);color:var(--ink);padding:3px 10px;border-radius:99px;background:rgba(8,12,20,.8);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);pointer-events:none}
+.sl-credit{left:10px;bottom:10px}
+.sl-open{right:10px;top:10px;color:var(--blue);border-color:rgba(56,189,248,.5)}
+.dots{position:absolute;left:50%;bottom:6px;z-index:3;transform:translateX(-50%);display:flex}
+.dots button{width:20px;height:20px;padding:0;background:none;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dots button::after{content:"";width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:background .2s,transform .2s}
+.dots button.on::after{background:var(--ink);transform:scale(1.35)}
+.slider.single .sl-nav,.slider.single .dots{display:none}
+
+/* Fan art lightbox */
+.modal.lightbox{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:12px;padding:64px 16px 16px;cursor:default;z-index:9990}
+.lb-stage{position:relative;flex:1;min-height:0}
+.lb-stage>img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;border:0;border-radius:0;box-shadow:none;-webkit-user-drag:none}
+.lightbox .credit{align-self:center}
+.thumbs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px;flex:none}
+.thumbs button:first-child{margin-left:auto}.thumbs button:last-child{margin-right:auto}
+.thumbs button{flex:none;width:88px;height:60px;padding:0;overflow:hidden;background:var(--panel2);border:2px solid transparent;border-radius:8px;opacity:.55;cursor:pointer;transition:opacity .2s,border-color .2s}
+.thumbs button:hover{opacity:.9}
+.thumbs button.on{opacity:1;border-color:var(--blue)}
+.lightbox .thumbs img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:cover;border:0;border-radius:0;box-shadow:none}
+.lightbox.single .sl-nav,.lightbox.single .thumbs{display:none}
 
 @media(max-width:720px){
   body{padding:12px 10px calc(24px + env(safe-area-inset-bottom,0px))}
@@ -155,6 +216,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   .media-gallery,.sections,.grid{grid-template-columns:1fr}
   .media-gallery{gap:10px}
   .banner{height:150px}
+  .thumbs button{width:64px;height:44px}
   .name{font-size:1.8rem}
   .view{height:260px}
   .metrics{display:grid;grid-template-columns:1fr 1fr}
@@ -162,8 +224,10 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   .metric:hover{transform:none}
   .metric dd{text-align:left}
   .graph-head{flex-direction:column;gap:2px}
+  .flow-pipeline{grid-template-columns:1fr;gap:6px}
+  .flow-arrow{transform:rotate(90deg);margin:2px 0}
 }
-@media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}.flow-step,.flow-arrow{opacity:1!important}}
 </style>
 </head>
 <body>
@@ -183,7 +247,20 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     <div class="sections" id="sections"></div>
   </section>
 
-  <main class="card hud">
+  <section class="card">
+    <div class="hud-head"><h2>Fan art</h2><span class="pill">Made by the community</span></div>
+    <div class="slider" id="slider" role="button" tabindex="0" aria-label="Open fan art gallery">
+      <div id="slides"></div>
+      <button class="sl-nav prev" id="slPrev" aria-label="Previous fan art">&#8249;</button>
+      <button class="sl-nav next" id="slNext" aria-label="Next fan art">&#8250;</button>
+      <span class="sl-open">Click to expand ⤢</span>
+      <span class="sl-credit" id="slCredit"></span>
+      <div class="dots" id="slDots"></div>
+    </div>
+    <p class="fan-sub" style="margin-bottom:0">Thank you to everyone who drew Go. Click the banner to view the full artwork.</p>
+  </section>
+
+  <main class="card hud" id="simulation">
     <div class="hud-head"><h2>Fist power-speed simulation</h2><span class="tag"><i></i>MODEL // GO_01</span></div>
 
     <div class="box">
@@ -215,52 +292,128 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 
 <div class="dock" id="dock"><output id="dockV"></output><input type="range" id="vSlider2" min="0.1" max="16" step="0.1" value="16" aria-label="Swing speed"><b id="dockStage"></b></div>
 
-<div class="modal" id="theaterModal"><div class="modal-close" id="modalCloseBtn">&times;</div><div id="modalContent"></div></div>
+<div class="modal lightbox" id="lightbox">
+  <div class="modal-close" id="lbClose" role="button" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></div>
+  <div class="lb-stage" id="lbStage">
+    <img id="lbImg" alt="" draggable="false">
+    <button class="sl-nav prev" id="lbPrev" aria-label="Previous fan art">&#8249;</button>
+    <button class="sl-nav next" id="lbNext" aria-label="Next fan art">&#8250;</button>
+  </div>
+  <div class="credit" id="lbCredit"></div>
+  <div class="thumbs" id="lbThumbs"></div>
+</div>
+
+<div class="modal" id="theaterModal"><div class="modal-close" id="modalCloseBtn" role="button" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></div><div id="modalContent"></div></div>
 
 <script>
 (() => {
-  const $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s);
+  const $= id => document.getElementById(id),$$ = s => document.querySelectorAll(s);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const text = o => Object.entries(o).forEach(([id, t]) => $(id).textContent = t);
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ───────── Profile content ─────────
-  const ul = a => `<ul>${a.map(([t, d]) => `<li><strong>${t}:</strong> ${d}</li>`).join('')}</ul>`;
+  // Helper for bullet list generation
+  const ul = items => `<ul>${items.map(([t, d]) => `<li><strong>${t}:</strong>${d}</li>`).join('')}</ul>`;
+
+  // Profile data definitions
   const DOC = [
-    ['Powers & weapons', 'wide', '--red', `
-      <h3>Gravity Fist (Passive)</h3>
-      <p>Go creates a localized gravitational force field ahead of his fist whenever he swings a punch.</p>
-      ${ul([['Slower Punch = Bigger Boom', 'The slower and wider he swings, the more time his gravitational field has to continuously pressurize and crush surrounding air molecules together.'],
-            ['Explosive Release', 'The second his fist hits a target, all that trapped, super-pressurized air collapses instantly and releases externally in a massive explosion.'],
-            ['Heavy Resistance', 'Pressurizing all that air creates heavy resistance, making his fist feel super heavy to swing.']])}
+    ['Power & Weapon', 'wide', '--red', `
+      <div class="flow-container">
+        <div class="flow-pipeline" id="powerPipeline">
+          <div class="flow-step" style="--fd: 0.1s">
+            <span class="step-title">Slower Punch Swing</span>
+            <span class="step-sub">Deliberate wind-up</span>
+          </div>
+          <div class="flow-arrow" style="--fd: 0.25s">➔</div>
+          <div class="flow-step" style="--fd: 0.35s">
+            <span class="step-title">Longer PGF Duration</span>
+            <span class="step-sub">Increasing G-Force</span>
+          </div>
+          <div class="flow-arrow" style="--fd: 0.5s">➔</div>
+          <div class="flow-step" style="--fd: 0.6s">
+            <span class="step-title">Molecule Pressurization</span>
+            <span class="step-sub">+ Heavier perceived weight</span>
+          </div>
+          <div class="flow-arrow" style="--fd: 0.75s">➔</div>
+          <div class="flow-step result-step" style="--fd: 0.85s">
+            <span class="step-title">Bigger Explosive Impact</span>
+            <span class="step-sub">Pressure outburst &amp; heatwave</span>
+          </div>
+        </div>
+        <div class="flow-cta"><button class="sim-link" data-goto="simulation">See simulation ↓</button></div>
+      </div>
+
+      <h3>Law of Go’s Fist</h3>
+      ${ul([
+        ['Pseudo-gravitational Force (PGF)', 'This phenomenon is a localized energy comparable to a gravitational force (G) that keeps increasing the longer it happens. It’s connected through Go’s mental state of punching. This makes PGF only active during the act of swinging a punch and it’s concentrated in front of his fist. The effect of PGF causes nearby floating molecules (e.g. air) to be pulled and pressurized in front of his fist.'],
+        ['Effective Weight / Perceived Weight', 'Increased Gs from PGF affect the weight of Go’s fist. This means the longer Go swings, the heavier he carries his fist. This is caused by the pull of gravity multiplying his fist’s original mass during the swing.'],
+        ['Explosive Impact', 'The fist with PGF activated will cause a sudden outburst of energy during impact. It’s like a spring being compressed really hard and suddenly released upon contact. Due to the nature of the sudden release of pressurization, friction between molecules occurs which in turn causes a massive increase in temperature. Most of the time, Go is unaffected because of the Leidenfrost effect (pockets of concentrated molecules like air in front of his fist shield his fist from the heat).']
+      ])}
+
       <h3>Combat Techniques</h3>
-      ${ul([['Quick Jab', "Very fast punch, so there's no time to build up heavy air pressure. Delivers a quick, sharp, stingy pain to the enemy."],
-            ['Power Swing', 'A big, slow winding swing that heavily pressurizes a massive pocket of air. Hits like a truck and causes a massive explosion.'],
-            ['Fusion Strike (Theoretical)', 'Never done before, but if he swings slow enough with enough power, his gravity field could pressurize the air hard enough to trigger a mini nuclear explosion.']])}`],
-    ['Strengths', '', '--green', ul([['Brawler / Infighter', "Loves getting right in the enemy's face and beating them up close."],
-            ['Tanky', 'Takes hits well so he can walk right up to enemies and land his punches.'],
-            ['Nimble Feet', 'Has super strong legs that let him dodge easily and move fast despite his heavy punches.']])],
-    ['Weaknesses', '', '--amber', ul([['No Ranged Attacks', "Can't do anything against enemies who stay far away and shoot from distance."],
-            ['Blast Recoil', "The explosions affect him too. He has to plant his feet hard so he doesn't get blown back, which tires him out fast."],
-            ['Tunnel Vision', "When he gets in close, he only focuses on what's right in front of him and loses sight of his sides."]])],
-    ['Origin & lore', 'wide', '--purple', `
-      <p><strong>Power origin:</strong> Go's raw love for brawling is so intense that his stance and focus trigger a strange bio-electric reaction in his nervous system. When he winds up a punch with pure intent, his body creates a natural gravity field ahead of his fist—pressurizing air purely through his raw willpower and natural combat instinct.</p>
-      <p><strong>Personality:</strong> A simple, straightforward guy. He doesn't care about the science or why his hands bend physics. If it lets him punch harder, he's happy with it!</p>`]
+      <p>Outside his power, Go is a very capable boxer. Using his power, he basically varies his punch speed to achieve intended effects:</p>
+      ${ul([
+        ['Quick Jab', 'Swings very fast, almost instantly. Although there’s not much PGF happening, the small area of pressurized molecules collected gives a sharp feeling impact.'],
+        ['Power Swing', 'Slow winding swing with longer PGF. Hits like a truck and causes a massive impact and heatwave.'],
+        ['Fusion Strike (Theoretical)', 'This has never been tried, but theoretically if Go is able to swing absurdly slow with an absurdly long PGF duration and has enough energy to push through it, he might be able to fuse the molecules. This fusion causes an instantaneous outburst of energy and heat equal to a hydrogen bomb explosion.']
+      ])}
+    `],
+    ['Strengths', '', '--green', ul([
+      ['Brawler / Infighter', 'Loves getting right into enemies personal territory and beating them up in such short range.'],
+      ['Tank', 'Able to sponge up a lot of damage without showing signs of weakness.'],
+      ['Great core and lower body strength', 'To support his fist, Go trains his body vigorously. This makes his body very stable to make a punch almost from any angle and keeps his feet quick.']
+    ])],
+    ['Weaknesses', '', '--amber', ul([
+      ['No Ranged Attacks', 'Go has no means to attack long range since his fist needs impact to cause any effect (He can’t just swing air into an enemy like All Might).'],
+      ['Heavy swing drains stamina', 'The side effect of increased PGF is increased effective weight/perceived weight of Go’s fist. Carrying heavier weight requires a lot of stamina, of which Go has a limited amount.'],
+      ['Knock backs', 'The bigger the impact, the bigger the knock back Go feels. The knock backs can cause Go to stagger and pause briefly before landing the next punch.'],
+      ['Tunnel Vision', 'When he gets close, his vision is naturally limited only to what’s in front of him. This makes him bad at anticipating attacks outside his field of view.']
+    ])],
+    ['Origin & Lore', 'wide', '--purple', `
+      <p>The Pseudo-gravitational Force phenomenon isn't a superpower he was given; it’s a physical side effect of his singular, unfiltered love for punching.</p>
+      <p>In a world full of complex martial techniques and elemental arts, Go was simply a guy who couldn't stop fighting. He wasn't looking for enlightenment, dominance, or fame—he just loved the raw, honest impact of fist against fist. He trained with no hesitation, swinging millions of punches into the sack day after day.</p>
+      <p>Eventually, his absolute focus created a phenomenon. In martial lore, it's believed that when a human mind focuses on a single movement with absolute, zero-doubt intent, the energy of the unknown collects. Go’s mind held so much density of intent when winding up a swing that the atmosphere took it literally: space itself began to collapse inward toward his fist, pulling air into a high-pressure pocket. Go has no idea about the physics behind it, nor does he care. To him, the universe is just giving his punches a little extra weight to keep the fights interesting.</p>
+      <p>Personally, Go is a simple, straightforward guy. He just likes punching to death anything he deems worth his time.</p>
+    `]
   ];
+
   $('sections').innerHTML = DOC.map(([t, c, dot, b]) => `<details class="${c}" style="--dot:var(${dot})"><summary>${t}</summary><div class="body">${b}</div></details>`).join('');
 
-  // ───────── Stats & tiers ─────────
+  // Jump-to-simulation buttons
+  $$('[data-goto]').forEach(b => b.onclick = () => {
+    const t = $(b.dataset.goto);
+    t.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+    t.classList.remove('spot'); void t.offsetWidth; t.classList.add('spot');
+    setTimeout(() => t.classList.remove('spot'), 3200);
+  });
+
+  // Re-trigger visual flow animations on tab toggle
+  document.querySelectorAll('.sections details').forEach(d => {
+    d.addEventListener('toggle', () => {
+      if (d.open) {
+        const pipeline = d.querySelector('#powerPipeline');
+        if (pipeline) {
+          const items = pipeline.querySelectorAll('.flow-step, .flow-arrow');
+          items.forEach(el => el.classList.remove('active-anim'));
+          void pipeline.offsetWidth; // Force reflow
+          items.forEach(el => el.classList.add('active-anim'));
+        }
+      }
+    });
+  });
+
+  // Stats definition
   const STATS = {
-    weight: { title: 'Effective weight', color: '--blue', id: 'wVal',
-      text: "Apparent mass of Go's fist during swing, escalating exponentially as localized gravity pressurizes surrounding matter." },
+    weight: { title: 'Effective/Perceived Weight', color: '--blue', id: 'wVal',
+      text: "Apparent mass and weight felt by Go during his punch swing, escalating exponentially as localized gravity multiplies his fist's effective mass." },
     temp: { title: 'Compression temp', color: '--purple', id: 'tempVal',
-      text: 'Peak thermodynamic temperature generated by extreme atmospheric molecule pressurization ahead of the strike.' },
+      text: 'Peak thermodynamic temperature generated by extreme molecule pressurization and friction ahead of the strike.' },
     strain: { title: 'Tidal strain', color: '--amber', id: 'sVal',
       text: "Structural and physical strain exerted on Go's body caused by the opposing gravitational pull and accumulated fist weight." },
     force: { title: 'Peak impact force', color: '--red', id: 'fVal',
       text: 'Total kinetic and explosive force delivered directly to the target upon contact.' }
   };
-  for (const k in STATS) STATS[k].col = css(STATS[k].color); // resolve colors once
+  for (const k in STATS) STATS[k].col = css(STATS[k].color);
   $('metrics').innerHTML = Object.entries(STATS).map(([k, s]) => `<div class="metric" data-stat="${k}" role="button" tabindex="0"><dt>${s.title}</dt><dd id="${s.id}"></dd></div>`).join('');
   $('stageBar').innerHTML = '<i></i>'.repeat(8);
 
@@ -275,9 +428,9 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     [0.0,  'Stage 8 — Core Fusion Ignition: Micro-blackhole gravitational field. Triggers plasma nuclear fusion.']
   ];
 
-  const vSlider = $('vSlider'), vSlider2 = $('vSlider2'), host = $('sim3d'), canvas = $('curve'), ctx = canvas.getContext('2d');
+  const vSlider = $('vSlider'), vSlider2 =$('vSlider2'), host = $('sim3d'), canvas =$('curve'), ctx = canvas.getContext('2d');
 
-  // Scroll reveal (staggered by sibling index, runs once per element)
+  // Scroll reveal
   let seen = false;
   const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && (seen = true, e.target.classList.add('in'), io.unobserve(e.target))), { threshold: 0.08 });
   $$('.card,.hud>*,.sections details').forEach(el => {
@@ -285,20 +438,110 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     el.style.setProperty('--d', [...el.parentNode.children].indexOf(el) % 4 * 70 + 'ms');
     io.observe(el);
   });
-  setTimeout(() => seen || $$('.reveal:not(.in)').forEach(el => el.classList.add('in')), 2500); // fallback: if the observer never fires, show everything
+  setTimeout(() => seen || $$('.reveal:not(.in)').forEach(el => el.classList.add('in')), 2500);
 
-  // ───────── Theater modal ─────────
-  const modal = $('theaterModal'), content = $('modalContent');
-  const openTheater = (tag, src, props) => { content.replaceChildren(Object.assign(document.createElement(tag), { src }, props)); modal.classList.add('active'); };
+  // Theater modal (optional artist credit shown under the image)
+  const modal = $('theaterModal'), content =$('modalContent');
+  const openTheater = (tag, src, props, artist) => {
+    const el = Object.assign(document.createElement(tag), { src }, props);
+    const nodes = [el];
+    if (artist) {
+      const cap = document.createElement('div');
+      cap.className = 'credit';
+      cap.append('Art by ');
+      const b = document.createElement('b'); b.textContent = artist;
+      cap.append(b);
+      nodes.push(cap);
+    }
+    content.replaceChildren(...nodes);
+    modal.classList.add('active');
+  };
   const closeTheater = () => { modal.classList.remove('active'); content.replaceChildren(); };
   const bind = (id, fn) => { const b = $(id); b.onclick = fn; b.onkeydown = e => e.key === 'Enter' && fn(); };
   bind('photoBtn', () => openTheater('img', 'https://i.imgur.com/59hhbSm.png', { alt: 'Go character expanded artwork' }));
   bind('videoBtn', () => openTheater('video', 'https://i.imgur.com/3uIcuDE.mp4', { controls: true, autoplay: true, playsInline: true }));
+
+  // Fan art — add new pieces as extra lines in this array
+  const FANART = [
+    { src: 'https://i.imgur.com/C8QflCM.png', artist: 'franLu07' },
+    { src: 'https://i.imgur.com/rSqewcn.gif', artist: 'Inigo shading' }
+  ];
+  const slider = $('slider'), slidesEl = $('slides'), dotsEl = $('slDots'), lb = $('lightbox');
+  let cur = 0, timer;
+
+  // Slideshow banner
+  FANART.forEach(({ src, artist }, i) => {
+    const sl = document.createElement('div');
+    sl.className = 'slide';
+    const im = new Image();
+    im.src = src; im.alt = `Fan art of Go by ${artist}`;
+    sl.append(im);
+    slidesEl.append(sl);
+    const d = document.createElement('button');
+    d.setAttribute('aria-label', `Show fan art ${i + 1}`);
+    d.onclick = e => { e.stopPropagation(); show(i); startAuto(); };
+    dotsEl.append(d);
+  });
+  function show(i) {
+    cur = (i + FANART.length) % FANART.length;
+    [...slidesEl.children].forEach((el, k) => el.classList.toggle('on', k === cur));
+    [...dotsEl.children].forEach((el, k) => el.classList.toggle('on', k === cur));
+    $('slCredit').textContent = 'by ' + FANART[cur].artist;
+  }
+  function startAuto() {
+    clearInterval(timer);
+    if (RM || FANART.length < 2) return;
+    timer = setInterval(() => { if (!lb.classList.contains('active') && !slider.matches(':hover')) show(cur + 1); }, 5000);
+  }
+  if (FANART.length < 2) slider.classList.add('single');
+  $('slPrev').onclick = e => { e.stopPropagation(); show(cur - 1); startAuto(); };
+  $('slNext').onclick = e => { e.stopPropagation(); show(cur + 1); startAuto(); };
+
+  // Lightbox: full-size viewer with a thumbnail strip
+  const lbImg = $('lbImg'), thumbsEl = $('lbThumbs'), lbStage = $('lbStage');
+  let lbCur = 0, sx = null;
+  if (FANART.length < 2) lb.classList.add('single');
+  FANART.forEach(({ src, artist }, i) => {
+    const t = document.createElement('button');
+    t.setAttribute('aria-label', `View fan art by ${artist}`);
+    const im = new Image(); im.src = src; im.alt = '';
+    t.append(im); t.onclick = () => lbShow(i); thumbsEl.append(t);
+  });
+  function lbShow(i) {
+    lbCur = (i + FANART.length) % FANART.length;
+    const { src, artist } = FANART[lbCur];
+    lbImg.src = src; lbImg.alt = `Fan art of Go by ${artist}`;
+    $('lbCredit').replaceChildren('Art by ', Object.assign(document.createElement('b'), { textContent: artist }));
+    [...thumbsEl.children].forEach((el, k) => {
+      el.classList.toggle('on', k === lbCur);
+      if (k === lbCur) el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: RM ? 'auto' : 'smooth' });
+    });
+  }
+  const openLightbox = () => { lb.classList.add('active'); document.body.style.overflow = 'hidden'; clearInterval(timer); lbShow(cur); };
+  const closeLightbox = () => { lb.classList.remove('active'); document.body.style.overflow = ''; show(lbCur); startAuto(); };
+  slider.onclick = openLightbox;
+  slider.onkeydown = e => (e.key === 'Enter' || e.key === ' ') && e.target === slider && (e.preventDefault(), openLightbox());
+  lb.onclick = e => e.target === lb && closeLightbox();
+  $('lbClose').onclick = closeLightbox;
+  $('lbPrev').onclick = () => lbShow(lbCur - 1);
+  $('lbNext').onclick = () => lbShow(lbCur + 1);
+  lbStage.addEventListener('pointerdown', e => sx = e.clientX);
+  lbStage.addEventListener('pointerup', e => { if (sx != null && Math.abs(e.clientX - sx) > 50) lbShow(lbCur + (e.clientX < sx ? 1 : -1)); sx = null; });
+  show(0); startAuto();
+
   modal.onclick = e => e.target === modal && closeTheater();
   $('modalCloseBtn').onclick = closeTheater;
-  addEventListener('keydown', e => e.key === 'Escape' && closeTheater());
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (modal.classList.contains('active')) closeTheater();
+    else if (lb.classList.contains('active')) closeLightbox();
+  });
+  addEventListener('keydown', e => {
+    if (!lb.classList.contains('active') || modal.classList.contains('active')) return;
+    if (e.key === 'ArrowLeft') lbShow(lbCur - 1);
+    if (e.key === 'ArrowRight') lbShow(lbCur + 1);
+  });
 
-  // Pause the banner video while off-screen
   const bv = document.querySelector('.banner video');
   new IntersectionObserver(([e]) => e.isIntersecting ? bv.play().catch(() => {}) : bv.pause()).observe(bv);
 
@@ -307,7 +550,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
   let activeStat = 'force';
 
-  // ───────── Scene ─────────
+  // 3D Scene setup
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x050811);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
@@ -324,7 +567,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.8));
   const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 4); scene.add(sun);
 
-  // ───────── 3D 1-Meter Distance Ruler ─────────
+  // 3D Distance Ruler
   const FLOOR = -0.9, START = -2.4, PATH = 4.0, IMPACT = START + PATH;
   const grid = new THREE.GridHelper(10, 20, 0x1e293b, 0x0f172a); grid.position.y = FLOOR; scene.add(grid);
 
@@ -345,7 +588,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   scene.add(new THREE.LineSegments(axGeo, new THREE.LineBasicMaterial({ color: 0x334155 })));
   label('1.00m Travel Distance', 0, FLOOR, AX_Z + 0.65, 0.22, '#38bdf8');
 
-  // ───────── Target Plate ─────────
+  // Target Plate Mechanics
   const ROWS = 6, COLS = 6, N = ROWS * COLS, BH = 1.6 / ROWS, BD = 1.6 / COLS, WALL_X = 2.0;
   const wall = new THREE.InstancedMesh(new THREE.BoxGeometry(0.12, BH * 0.95, BD * 0.95),
                                        new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.1 }), N);
@@ -398,7 +641,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     wall.instanceColor.needsUpdate = true;
   }
 
-  // Fist Group
+  // Fist mesh
   const fist = new THREE.Group();
   const steel = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.4, metalness: 0.5 });
   const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.6, 24).rotateZ(Math.PI / 2), steel); arm.position.x = -0.8; fist.add(arm);
@@ -411,7 +654,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   const forceArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(WALL_X + 0.1, 0, 0), 1, 0xf87171, 0.22, 0.12);
   forceArrow.visible = false; scene.add(velArrow, forceArrow);
 
-  // Loop
+  // Animation Loop
   const HOLD = 1.6, RAMP = 0.25;
   let x = START, hold = 0, last = null, visible = true, stress = 0, fieldOpacity = 0;
 
@@ -451,7 +694,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     renderer.render(scene, camera);
   }
 
-  // ───────── Multi-Curve Graph (curve paths are cached per canvas size) ─────────
+  // Graph Canvas Rendering
   function getCurveVal(stat, v) {
     if (stat === 'force') return slow(v, 2.5);
     if (stat === 'weight' || stat === 'strain') return slow(v, 2.2);
@@ -482,7 +725,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
       ctx.textAlign = 'center'; ctx.fillText((V_MIN + f * SPAN).toFixed(0) + 'm/s', xx, h - B + 14 * d);
     }
 
-    const cx = px((v - V_MIN) / SPAN); // speed crosshair
+    const cx = px((v - V_MIN) / SPAN);
     ctx.setLineDash([4 * d, 4 * d]); ctx.strokeStyle = 'rgba(248,250,252,.28)';
     ctx.beginPath(); ctx.moveTo(cx, T); ctx.lineTo(cx, h - B); ctx.stroke(); ctx.setLineDash([]);
 
@@ -500,7 +743,6 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     });
   }
 
-  // Stat selection
   function selectStat(k) {
     activeStat = k;
     const s = STATS[k];
@@ -515,7 +757,6 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     r.onkeydown = e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), pick());
   });
 
-  // Update stats
   const fmt = n => n.toLocaleString('en-US');
   let lastIdx = -1;
   function update() {
@@ -529,7 +770,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 
     vSlider.style.setProperty('--f', f);
     vSlider2.value = vSlider.value; vSlider2.style.setProperty('--f', f);
-    $('vVal').style.color = $('dockV').style.color = `hsl(${f * 130} 85% 65%)`; // red (slow) to green (fast), matches the slider
+    $('vVal').style.color = $('dockV').style.color = `hsl(${f * 130} 85% 65%)`;
     text({
       vVal: v.toFixed(1) + ' m/s', dockV: v.toFixed(1) + ' m/s',
       wVal: `${fmt(MASS * g)} kg (${fmt(g)} G)`,
@@ -538,7 +779,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
       sVal: `${strain}% [${lab}]`
     });
     $('sVal').style.color = css(col);
-    for (const k in STATS) $(STATS[k].id).parentNode.style.setProperty('--lvl', getCurveVal(k, v)); // stat level bars
+    for (const k in STATS) $(STATS[k].id).parentNode.style.setProperty('--lvl', getCurveVal(k, v));
 
     const idx = TIERS.findIndex(t => v >= t[0]), [head, body] = TIERS[idx][1].split(': ');
     text({ stageNo: `Stage ${idx + 1} of ${TIERS.length}`, stageName: head.replace(/^Stage \d+ — /, '') + ':', stageText: body });
@@ -556,7 +797,6 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     drawGraph();
   }
 
-  // Speed control: slider, dock slider, technique dropdown and graph scrubbing all go through setSpeed
   let tw, gliding = false;
   const stop = () => { cancelAnimationFrame(tw); gliding = false; };
   const setSpeed = v => { vSlider.value = v; update(); if (hold <= 0) reset(); };
@@ -577,9 +817,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   host.addEventListener('pointerdown', () => $('hint').classList.add('off'), { once: true });
   setTimeout(() => $('hint').classList.add('off'), 6000);
 
-  // Dock: appears once the main speed panel has scrolled out of view above
   new IntersectionObserver(([e]) => $('dock').classList.toggle('show', !e.isIntersecting && e.boundingClientRect.top < 0)).observe(vSlider.closest('.box'));
-
 
   selectStat('force'); reset(); update(); resize();
   requestAnimationFrame(frame);
