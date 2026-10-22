@@ -69,11 +69,12 @@ summary::after{content:"";margin-left:auto;width:8px;height:8px;border:solid var
 details[open] summary::after{transform:rotate(45deg);border-color:var(--dot)}
 summary:hover{background:rgba(255,255,255,.035)}
 .body{padding:12px 14px 16px;border-top:1px dashed var(--line);flex:1}
-.body h3{font-size:.85rem;color:var(--red);margin:14px 0 6px}
+.body h3{font-size:.75rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .body h3:first-child{margin-top:0}
-.body p{margin-top:8px;line-height:1.6}
-.body ul{padding-left:18px;margin-top:6px}
-.body li{margin-top:7px;line-height:1.55}
+.body p{margin-top:12px;line-height:1.75}
+.body ul{list-style:none;padding:0;margin-top:12px;display:flex;flex-direction:column;gap:18px}
+.body li{margin:0;padding:0;line-height:1.7}
+.body li strong{display:block;margin-bottom:3px;font-size:.95rem}
 .body strong{color:var(--ink)}
 
 /* Visual Sequence Pipeline Component */
@@ -313,7 +314,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Helper for bullet list generation
-  const ul = items => `<ul>${items.map(([t, d]) => `<li><strong>${t}:</strong>${d}</li>`).join('')}</ul>`;
+  const ul = items => `<ul>${items.map(([t, d]) => `<li><strong>${t}</strong>${d}</li>`).join('')}</ul>`;
 
   // Profile data definitions
   const DOC = [
