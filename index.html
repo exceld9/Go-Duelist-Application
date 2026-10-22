@@ -187,6 +187,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
 .slide.on{opacity:1}
 .slide img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 30%}
 .sl-nav{position:absolute;top:50%;z-index:3;transform:translateY(-50%);width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;font:400 22px/1 var(--sans);color:var(--ink);background:rgba(8,12,20,.7);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14);border-radius:50%;cursor:pointer;transition:background .2s,border-color .2s}
+.sl-nav svg{display:block}
 .sl-nav:hover{background:rgba(56,189,248,.25);border-color:var(--blue)}
 .sl-nav.prev{left:10px}.sl-nav.next{right:10px}
 .sl-credit,.sl-open{position:absolute;z-index:3;font:600 11px var(--sans);color:var(--ink);padding:3px 10px;border-radius:99px;background:rgba(8,12,20,.8);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);pointer-events:none}
@@ -252,8 +253,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
     <div class="hud-head"><h2>Fan art</h2><span class="pill">Made by the community</span></div>
     <div class="slider" id="slider" role="button" tabindex="0" aria-label="Open fan art gallery">
       <div id="slides"></div>
-      <button class="sl-nav prev" id="slPrev" aria-label="Previous fan art">&#8249;</button>
-      <button class="sl-nav next" id="slNext" aria-label="Next fan art">&#8250;</button>
+      <button class="sl-nav prev" id="slPrev" aria-label="Previous fan art"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 5l-7 7 7 7"/></svg></button>
+      <button class="sl-nav next" id="slNext" aria-label="Next fan art"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5l7 7-7 7"/></svg></button>
       <span class="sl-open">Click to expand ⤢</span>
       <span class="sl-credit" id="slCredit"></span>
       <div class="dots" id="slDots"></div>
@@ -297,8 +298,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15);box-shadow:0 0 
   <div class="modal-close" id="lbClose" role="button" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></div>
   <div class="lb-stage" id="lbStage">
     <img id="lbImg" alt="" draggable="false">
-    <button class="sl-nav prev" id="lbPrev" aria-label="Previous fan art">&#8249;</button>
-    <button class="sl-nav next" id="lbNext" aria-label="Next fan art">&#8250;</button>
+    <button class="sl-nav prev" id="lbPrev" aria-label="Previous fan art"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 5l-7 7 7 7"/></svg></button>
+    <button class="sl-nav next" id="lbNext" aria-label="Next fan art"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 5l7 7-7 7"/></svg></button>
   </div>
   <div class="credit" id="lbCredit"></div>
   <div class="thumbs" id="lbThumbs"></div>
