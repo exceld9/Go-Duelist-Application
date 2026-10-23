@@ -13,7 +13,7 @@
 <style>
 :root{color-scheme:dark;
   --bg:#1c1d1f;--band:#232528;--deep:#141516;--deep2:#191b1d;--panel:#2a2c30;--line:#3b3e43;--ink:#f4f2ee;--text:#d6d3cc;--mute:#9a978f;
-  --blue:#7fb2d6;--red:#ef5b45;--amber:#e3ad4b;--green:#86bf8f;--purple:#b399d4;
+  --blue:#7fb2d6;--red:#ef5b45;--amber:#e3ad4b;--green:#86bf8f;--purple:#b399d4;--dc:#5865f2;--dc-hi:#6a76f4;
   --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
   --serif:"Newsreader",Georgia,"Times New Roman",serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
@@ -52,10 +52,25 @@ details[open] .body{animation:rise .3s ease both}
 .brand{display:inline-flex;align-items:center;gap:.1em;font:800 1.5rem var(--display);letter-spacing:.06em;color:var(--ink);text-decoration:none;
   opacity:0;transform:translateY(-5px);transition:opacity .25s,transform .25s var(--ease);pointer-events:none}
 .nav.show-brand .brand{opacity:1;transform:none;pointer-events:auto}
+.nav-right{display:flex;align-items:center;gap:18px;align-self:stretch}
 .nav nav{display:flex;gap:26px;align-self:stretch}
 .nav nav a{display:flex;align-items:center;margin-bottom:-1px;font:600 1.1rem var(--display);letter-spacing:.04em;color:var(--mute);text-decoration:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
 .nav nav a:hover{color:var(--ink)}
 .nav nav a.on{color:var(--ink);border-color:var(--ink)}
+/* Discord discussion button — solid blurple; expands to the full description on hover (desktop only) */
+.nav-discord{display:inline-flex;align-items:center;font:600 .72rem var(--mono);letter-spacing:.1em;
+  text-transform:uppercase;color:#fff;text-decoration:none;border:1px solid var(--dc);
+  background:var(--dc);padding:8px 14px;transition:background .2s,border-color .2s}
+.nav-discord svg{display:block;flex:none}
+.dc-label,.dc-long{display:block;overflow:hidden;white-space:nowrap;
+  transition:max-width .45s var(--ease),opacity .25s,margin .45s var(--ease)}
+.dc-label{max-width:90px;opacity:1;margin-left:8px}
+.dc-long{max-width:0;opacity:0;margin-left:0}
+.nav-discord:hover,.nav-discord:focus-visible{background:var(--dc-hi);border-color:var(--dc-hi)}
+@media(hover:hover) and (min-width:900px){
+  .nav-discord:hover .dc-label{max-width:0;opacity:0;margin-left:0}
+  .nav-discord:hover .dc-long{max-width:400px;opacity:1;margin-left:8px}
+}
 
 /* Bands */
 .card{position:relative;padding:56px var(--gut) 64px;scroll-margin-top:52px}
@@ -261,6 +276,10 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 
 @media(max-width:720px){
   .nav nav{gap:16px}
+  /* Discord button goes icon-only on small screens */
+  .nav-discord .dc-label,.nav-discord .dc-long{display:none}
+  .nav-discord{padding:8px 10px}
+  .nav-right{gap:12px}
   .card{padding-top:40px;padding-bottom:48px}
   .grid{grid-template-columns:1fr}
   figure.media .frame{height:220px}
@@ -307,7 +326,14 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 <body>
 <header class="nav">
   <a class="brand" href="#profile" aria-label="Back to top"><span class="bk l"></span><span>GO</span><span class="bk r"></span></a>
-  <nav><a href="#profile">Profile</a><a href="#fanart">Fan art</a><a href="#simulation">Simulation</a></nav>
+  <div class="nav-right">
+    <nav><a href="#profile">Profile</a><a href="#fanart">Fan art</a><a href="#simulation">Simulation</a></nav>
+    <a class="nav-discord" href="https://discord.com/channels/108249481656418304/1560726003200950383" target="_blank" rel="noopener" aria-label="See duelist post in Hyun's Dojo Discord (opens in a new tab)">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      <span class="dc-label" aria-hidden="true">Discord</span>
+      <span class="dc-long" aria-hidden="true">See duelist post in Hyun's Dojo Discord</span>
+    </a>
+  </div>
 </header>
 <div class="app">
 
@@ -498,7 +524,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     updateNav();
   }, { passive: true });
   addEventListener('resize', updateNav);
-  $$('.nav a').forEach(a => a.addEventListener('click', () => holdNav(a.getAttribute('href').slice(1))));
+  // Only section anchors drive the highlight logic — the Discord button is an external link
+  $$('.nav nav a').forEach(a => a.addEventListener('click', () => holdNav(a.getAttribute('href').slice(1))));
   updateNav();
 
   // Nav [GO] brand appears only after the hero [GO] title has scrolled out of view
