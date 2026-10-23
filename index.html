@@ -326,7 +326,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       </div>
       <figure class="media" id="photoBtn" role="button" tabindex="0" aria-label="Expand photo">
         <div class="frame hero-fig">
-          <img src="https://i.imgur.com/59hhbSm.png" alt="Go character photo banner">
+          <img src="assets/Banner%20Picture_v2.png" alt="Go character photo banner">
         </div>
         <figcaption><span>Photo artwork</span><span class="expand">Click to expand</span></figcaption>
       </figure>
@@ -336,7 +336,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       <figure class="media" id="videoBtn" role="button" tabindex="0" aria-label="Expand video">
         <div class="frame">
           <span class="wip-tag">DEMO WIP</span>
-          <video src="https://i.imgur.com/3uIcuDE.mp4" autoplay loop muted playsinline preload="metadata" poster="https://i.imgur.com/59hhbSm.png"></video>
+          <video src="assets/WIP%20Duelist%20Animatic_13%20small.mp4" autoplay loop muted playsinline preload="metadata" poster="assets/Banner%20Picture_v2.png"></video>
         </div>
         <figcaption><span>Animation demo</span><span class="expand">Click to expand</span></figcaption>
       </figure>
@@ -575,13 +575,14 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   };
   const closeTheater = () => { modal.classList.remove('active'); content.replaceChildren(); };
   const bind = (id, fn) => { const b = $(id); b.onclick = fn; b.onkeydown = e => e.key === 'Enter' && fn(); };
-  bind('photoBtn', () => openTheater('img', 'https://i.imgur.com/59hhbSm.png', { alt: 'Go character expanded artwork' }));
-  bind('videoBtn', () => openTheater('video', 'https://i.imgur.com/3uIcuDE.mp4', { controls: true, autoplay: true, playsInline: true }));
+  bind('photoBtn', () => openTheater('img', 'assets/Banner%20Picture_v2.png', { alt: 'Go character expanded artwork' }));
+  bind('videoBtn', () => openTheater('video', 'assets/WIP%20Duelist%20Animatic_13%20small.mp4', { controls: true, autoplay: true, playsInline: true }));
 
   // Fan art — add new pieces as extra lines in this array
+  // Fanart1.png = Inigo shading, Fanart2.png = franLu07 (as uploaded to assets/)
   const FANART = [
-    { src: 'https://i.imgur.com/C8QflCM.png', artist: 'franLu07' },
-    { src: 'https://i.imgur.com/rSqewcn.gif', artist: 'Inigo shading' }
+    { src: 'assets/Fanart1.png', artist: 'Inigo shading' },
+    { src: 'assets/Fanart2.png', artist: 'franLu07' }
   ];
   const slider = $('slider'), slidesEl = $('slides'), dotsEl = $('slDots'), lb = $('lightbox');
   let cur = 0, timer;
