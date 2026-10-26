@@ -362,7 +362,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       <figure class="media" id="videoBtn" role="button" tabindex="0" aria-label="Expand video">
         <div class="frame">
           <span class="wip-tag">DEMO WIP</span>
-          <video src="assets/WIP%20Duelist%20Animatic_13%20small.mp4" autoplay loop muted playsinline preload="metadata" poster="assets/Banner%20Picture_v2.png"></video>
+          <video src="assets/Duelist%Animatic_14.mp4" autoplay loop muted playsinline preload="metadata" poster="assets/Banner%20Picture_v2.png"></video>
         </div>
         <figcaption><span>Animation demo</span><span class="expand">Click to expand</span></figcaption>
       </figure>
@@ -603,7 +603,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   const closeTheater = () => { modal.classList.remove('active'); content.replaceChildren(); };
   const bind = (id, fn) => { const b = $(id); b.onclick = fn; b.onkeydown = e => e.key === 'Enter' && fn(); };
   bind('photoBtn', () => openTheater('img', 'assets/Banner%20Picture_v2.png', { alt: 'Go character expanded artwork' }));
-  bind('videoBtn', () => openTheater('video', 'assets/WIP%20Duelist%20Animatic_13%20small.mp4', { controls: true, autoplay: true, playsInline: true }));
+  bind('videoBtn', () => openTheater('video', 'assets/Duelist%Animatic_14.mp4', { controls: true, autoplay: true, playsInline: true }));
 
   // Fan art — add new pieces as extra lines in this array
   // Fanart1.png = Inigo shading, Fanart2.png = franLu07 (as uploaded to assets/)
