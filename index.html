@@ -39,19 +39,66 @@ button{font-family:inherit}
 @keyframes nameGlow{
   0%,100%{filter:drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 16px rgba(255,255,255,.15))}
   50%{filter:drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 0 22px rgba(255,255,255,.55)) drop-shadow(0 0 46px rgba(255,255,255,.3))}}
+@keyframes spin{to{transform:rotate(360deg)}}
 details[open] .body{animation:rise .3s ease both}
 
-/* Bracket blocks — shared by hero title and nav brand; scale with font-size via em */
+/* Bracket blocks — shared by hero stub and flying ghost; scale with font-size via em */
 .bk{flex:none;width:.16em;height:1em;border:.08em solid currentColor}
 .bk.l{border-right:0}
 .bk.r{border-left:0}
 
-/* Top bar */
-.nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:env(safe-area-inset-top,0px) var(--gut) 0;background:var(--bg);border-bottom:1px solid var(--line)}
-/* Brand uses block brackets like the hero title; hidden while the hero [GO] is on screen */
-.brand{display:inline-flex;align-items:center;gap:.1em;font:800 1.5rem var(--display);letter-spacing:.06em;color:var(--ink);text-decoration:none;
-  opacity:0;transform:translateY(-5px);transition:opacity .25s,transform .25s var(--ease);pointer-events:none}
-.nav.show-brand .brand{opacity:1;transform:none;pointer-events:auto}
+/* Title typography (stub is measurement-only; the ghost renders it) */
+.name,.g-name{display:inline-flex;align-items:center;gap:.07em;
+  font:800 clamp(4.2rem,10vw,7.6rem)/1 var(--display);letter-spacing:.02em;color:#fff}
+.name{margin:0 0 20px;visibility:hidden}
+.g-name{filter:drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 16px rgba(255,255,255,.15));
+  animation:nameGlow 3.4s ease-in-out infinite;transition:transform .2s var(--ease)}
+@media (max-width:880px),(orientation:portrait){
+  .name,.g-name{font-size:clamp(4.6rem,17vw,8rem)}
+  .name{margin-bottom:18px}
+}
+
+/* First-load intro: brackets accelerate in from the sides and hit dead-stop.
+   Hard metal — impact flash + rigid recoil (translation only, no squash of the letters). */
+@keyframes bkInL{
+  0%{transform:translateX(-1.15em);opacity:0;filter:brightness(1);animation-timing-function:cubic-bezier(.6,0,.9,.4)}
+  12%{opacity:1}
+  70%{transform:translateX(0);filter:brightness(2.4);animation-timing-function:ease-out}
+  80%{transform:translateX(-.05em)}
+  100%{transform:translateX(0);filter:brightness(1)}
+}
+@keyframes bkInR{
+  0%{transform:translateX(1.15em);opacity:0;filter:brightness(1);animation-timing-function:cubic-bezier(.6,0,.9,.4)}
+  12%{opacity:1}
+  70%{transform:translateX(0);filter:brightness(2.4);animation-timing-function:ease-out}
+  80%{transform:translateX(.05em)}
+  100%{transform:translateX(0);filter:brightness(1)}
+}
+@keyframes goGlint{0%{filter:brightness(1)}35%{filter:brightness(2)}100%{filter:brightness(1)}}
+@keyframes metalShake{
+  0%,100%{transform:translate(0,0)}
+  20%{transform:translate(-3px,1px)}
+  40%{transform:translate(3px,-1px)}
+  60%{transform:translate(-2px,1px)}
+  80%{transform:translate(2px,0)}
+}
+.ghost.intro .bk.l{animation:bkInL .5s backwards}
+.ghost.intro .bk.r{animation:bkInR .5s backwards}
+.ghost.intro .g-text{animation:goGlint .45s .33s backwards}
+.ghost.intro .g-name{animation:metalShake .3s .33s backwards,nameGlow 3.4s ease-in-out 1.15s infinite}
+
+/* Flying title ghost: glued over the hero copy; when the title is half covered by the
+   nav bar it tweens up into the brand slot. Doubles as a back-to-top link once docked. */
+.ghost{position:fixed;left:0;top:0;z-index:45;transform-origin:0 0;display:inline-block;
+  text-decoration:none;visibility:hidden;will-change:transform;pointer-events:none}
+.ghost.ready{visibility:visible}
+.ghost.landed{pointer-events:auto;cursor:pointer}
+.ghost.landed:hover .g-name{transform:scale(1.05)}
+
+/* Top bar — no bottom border, so the landed [GO] sits seamlessly on the bar */
+.nav{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:env(safe-area-inset-top,0px) var(--gut) 0;background:var(--bg)}
+/* Invisible landing slot that reserves the brand's place in the bar */
+.brand-slot{display:inline-block;width:76px;height:30px}
 .nav-right{display:flex;align-items:center;gap:18px;align-self:stretch}
 .nav nav{display:flex;gap:26px;align-self:stretch}
 .nav nav a{display:flex;align-items:center;margin-bottom:-1px;font:600 1.1rem var(--display);letter-spacing:.04em;color:var(--mute);text-decoration:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
@@ -81,11 +128,6 @@ details[open] .body{animation:rise .3s ease both}
 .hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:40px;align-items:center;margin-bottom:34px}
 .hero-text{display:flex;flex-direction:column;align-items:flex-start}
 .eyebrow{font:600 .78rem var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--mute);margin-bottom:12px}
-/* [GO] — brackets drawn as CSS blocks, flex-centered on the letters, full text height */
-.name{display:inline-flex;align-items:center;gap:.07em;margin:0 0 20px;
-  font:800 clamp(4.2rem,10vw,7.6rem)/1 var(--display);letter-spacing:.02em;color:#fff;
-  filter:drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 16px rgba(255,255,255,.15));
-  animation:nameGlow 3.4s ease-in-out infinite}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font:600 .58rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--text);border:1px solid var(--line);padding:2px 7px;background:var(--panel)}
 .chip.hot{border-color:rgba(239,91,69,.5);color:var(--ink);background:rgba(239,91,69,.08)}
@@ -108,10 +150,15 @@ figure.media:hover figcaption{color:var(--ink)}
 .wip-tag{position:absolute;top:10px;left:10px;z-index:2;font:600 .68rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);background:rgba(20,21,22,.85);border:1px solid rgba(227,173,75,.5);padding:3px 9px;pointer-events:none}
 .hero-fig{height:clamp(300px,34vw,420px)}
 .vstrip{margin-bottom:46px}
+/* Video loading overlay — shown until the mp4 can play (no poster thumbnail) */
+.vload{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;gap:12px;
+  align-items:center;justify-content:center;background:var(--band);transition:opacity .4s}
+.vload.off{opacity:0;pointer-events:none}
+.vload .sq{width:26px;height:26px;border:2px solid var(--line);border-top-color:var(--red);animation:spin 1s linear infinite}
+.vload .vload-txt{font:600 .68rem var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
 @media (max-width:880px),(orientation:portrait){
   .hero{grid-template-columns:1fr;gap:24px}
   .hero-text{align-items:center;text-align:center}
-  .name{font-size:clamp(4.6rem,17vw,8rem);margin-bottom:18px}
   .chips{justify-content:center}
   .hero-fig{height:clamp(240px,55vw,420px)}
 }
@@ -322,10 +369,11 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 @media(max-width:460px){.metrics{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,::before,::after{animation:none!important;transition:none!important}.flow-step,.flow-arrow{opacity:1!important}}
 </style>
+<noscript><style>#heroName{visibility:visible!important}</style></noscript>
 </head>
 <body>
 <header class="nav">
-  <a class="brand" href="#profile" aria-label="Back to top"><span class="bk l"></span><span>GO</span><span class="bk r"></span></a>
+  <span class="brand-slot" aria-hidden="true"></span>
   <div class="nav-right">
     <nav><a href="#profile">Profile</a><a href="#fanart">Fan art</a><a href="#simulation">Simulation</a></nav>
     <a class="nav-discord" href="https://discord.com/channels/108249481656418304/1560726003200950383" target="_blank" rel="noopener" aria-label="See duelist post in Hyun's Dojo Discord (opens in a new tab)">
@@ -335,6 +383,13 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     </a>
   </div>
 </header>
+
+<!-- Flying title: renders [GO]; tweens from the hero into the nav slot when the title
+     is halfway covered by the bar. Doubles as a back-to-top link once docked. -->
+<a class="ghost" id="titleGhost" href="#profile" aria-label="GO — back to top">
+  <span class="g-name" aria-hidden="true"><span class="bk l"></span><span class="g-text">GO</span><span class="bk r"></span></span>
+</a>
+
 <div class="app">
 
   <section class="card" id="profile">
@@ -343,6 +398,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     <div class="hero">
       <div class="hero-text">
         <span class="eyebrow">Duelist application file</span>
+        <!-- Rendered by #titleGhost (which flies into the nav on trigger); kept for layout + measurement -->
         <h1 class="name" id="heroName"><span class="bk l"></span><span>GO</span><span class="bk r"></span></h1>
         <div class="chips">
           <span class="chip hot">Pseudo-gravitational Force</span>
@@ -362,7 +418,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       <figure class="media" id="videoBtn" role="button" tabindex="0" aria-label="Expand video">
         <div class="frame">
           <span class="wip-tag">DEMO WIP</span>
-          <video src="assets/Duelist%20Animatic_14.mp4" autoplay loop muted playsinline preload="metadata" poster="assets/Banner%20Picture_v2.png"></video>
+          <div class="vload" id="vload" aria-hidden="true"><span class="sq"></span><span class="vload-txt">Loading demo</span></div>
+          <video src="assets/Duelist%20Animatic_14.mp4" autoplay loop muted playsinline preload="metadata"></video>
         </div>
         <figcaption><span>Animation demo</span><span class="expand">Click to expand</span></figcaption>
       </figure>
@@ -505,6 +562,89 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 
   $('sections').innerHTML = DOC.map(([t, c, dot, b]) => `<details class="${c}" style="--dot:var(${dot})"><summary>${t}</summary><div class="body">${b}</div></details>`).join('');
 
+  /* ---------- Flying [GO] title ----------
+     The in-flow hero h1 is a hidden measurement stub; a fixed ghost renders the title.
+     While the title is on screen the ghost is glued to it 1:1. When the title is HALF
+     covered by the nav bar, the ghost detaches and tweens (time-based, eased) into the
+     brand slot. Scrolling back up past the same midpoint tweens it home. The tween
+     retargets mid-flight if the direction flips, so it never snaps or steps. */
+  const navBar = document.querySelector('.nav');
+  const heroName = $('heroName');
+  const slot = document.querySelector('.brand-slot');
+  const ghost = $('titleGhost');
+  const gName = ghost.querySelector('.g-name');
+
+  let state = null;            // 'attached' (over hero) | 'landed' (in nav slot)
+  let anim = null;             // { end, endState, from:{x,y,s}, t0, dur }
+  let pose = { x: 0, y: 0, s: 1 };
+  let raf = 0;
+
+  const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  function heroPose() {
+    const r = heroName.getBoundingClientRect();
+    return { x: r.left, y: r.top, s: 1 };
+  }
+  function slotPose() {
+    const r = slot.getBoundingClientRect(), gw = gName.offsetWidth, gh = gName.offsetHeight;
+    const k = gh > 0 ? r.height / gh : 1;
+    return { x: r.left + (r.width - gw * k) / 2, y: r.top + (r.height - gh * k) / 2, s: k };
+  }
+  function targetPose(end) { return end === 'landed' ? slotPose() : heroPose(); }
+  function paint() { ghost.style.transform = `translate(${pose.x}px, ${pose.y}px) scale(${pose.s})`; }
+
+  function stepGhost(ts) {
+    if (!anim) { raf = 0; return; }
+    const k = Math.min(1, (ts - anim.t0) / anim.dur), e = easeInOut(k), to = targetPose(anim.end);
+    pose = {
+      x: anim.from.x + (to.x - anim.from.x) * e,
+      y: anim.from.y + (to.y - anim.from.y) * e,
+      s: anim.from.s + (to.s - anim.from.s) * e
+    };
+    paint();
+    if (k < 1) { raf = requestAnimationFrame(stepGhost); }
+    else {
+      state = anim.endState;                 // capture destination state before clearing
+      const done = to;
+      anim = null; raf = 0;
+      ghost.classList.toggle('landed', state === 'landed');
+      pose = done; paint();
+    }
+  }
+
+  function refresh() {
+    const hr = heroName.getBoundingClientRect(), nr = navBar.getBoundingClientRect();
+    const halfGone = (hr.top + hr.height / 2) <= nr.bottom;   // title halfway covered → fly up
+    const want = halfGone ? 'landed' : 'attached';
+
+    if (state === null) {                                     // first evaluation: snap, no tween
+      state = want; pose = targetPose(want); paint();
+      ghost.classList.toggle('landed', want === 'landed');
+    } else if (anim) {                                        // mid-flight
+      if (anim.end !== want) {                                // direction flipped: retarget smoothly
+        anim.end = want; anim.endState = want;
+        anim.from = { ...pose };
+        anim.t0 = performance.now();
+        ghost.classList.remove('landed');
+      }
+    } else if (state !== want) {                              // idle, wrong place: launch tween
+      anim = { end: want, endState: want, from: { ...pose }, t0: performance.now(), dur: RM ? 1 : 520 };
+      if (want === 'attached') ghost.classList.remove('landed');
+      if (!raf) raf = requestAnimationFrame(stepGhost);
+    } else {                                                  // idle, correct place: glue 1:1
+      pose = targetPose(want); paint();
+    }
+  }
+
+  // Intro clang only when the page loads near the top (title is attached)
+  refresh();
+  if (state === 'attached' && scrollY < 80 && !RM) ghost.classList.add('intro');
+  ghost.classList.add('ready');
+  addEventListener('scroll', refresh, { passive: true });
+  addEventListener('resize', refresh);
+  addEventListener('load', refresh);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
+
   // Top bar: highlight the section being read
   const navLinks = [...$$('.nav nav a')], secs = ['profile', 'fanart', 'simulation'].map($);
   let navHold = false, navTimer;
@@ -524,14 +664,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     updateNav();
   }, { passive: true });
   addEventListener('resize', updateNav);
-  // Only section anchors drive the highlight logic — the Discord button is an external link
   $$('.nav nav a').forEach(a => a.addEventListener('click', () => holdNav(a.getAttribute('href').slice(1))));
   updateNav();
-
-  // Nav [GO] brand appears only after the hero [GO] title has scrolled out of view
-  const navBar = document.querySelector('.nav');
-  new IntersectionObserver(([e]) => navBar.classList.toggle('show-brand', !e.isIntersecting),
-    { rootMargin: '-56px 0px 0px 0px' }).observe($('heroName'));
 
   // Jump-to-simulation buttons
   $$('[data-goto]').forEach(b => b.onclick = () => {
@@ -686,7 +820,18 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     if (e.key === 'ArrowRight') lbShow(lbCur + 1);
   });
 
+  // Demo video: loading overlay until it can play (no poster thumbnail)
   const bv = document.querySelector('#videoBtn video');
+  const vload = $('vload');
+  const vHide = () => vload.classList.add('off');
+  const vShow = () => vload.classList.remove('off');
+  bv.addEventListener('canplay', vHide);
+  bv.addEventListener('waiting', vShow);
+  bv.addEventListener('error', () => {
+    vShow();
+    vload.querySelector('.sq').style.display = 'none';
+    vload.querySelector('.vload-txt').textContent = 'Demo unavailable';
+  });
   new IntersectionObserver(([e]) => e.isIntersecting ? bv.play().catch(() => {}) : bv.pause()).observe(bv);
 
   // Simulation
@@ -945,13 +1090,13 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     cancelAnimationFrame(glideRaf);
     const from = parseFloat(vSlider.value), t0 = performance.now(), dur = RM ? 1 : 750;
     gliding = true;
-    const step = ts => {
+    const stepG = ts => {
       const k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
       vSlider.value = vSlider2.value = from + (target - from) * e;
       update();
-      if (k < 1) glideRaf = requestAnimationFrame(step); else gliding = false;
+      if (k < 1) glideRaf = requestAnimationFrame(stepG); else gliding = false;
     };
-    glideRaf = requestAnimationFrame(step);
+    glideRaf = requestAnimationFrame(stepG);
   }
 
   // Wiring
