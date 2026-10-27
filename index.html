@@ -7,6 +7,8 @@
 <title>Go – Fist Power-Speed Simulation</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -300,6 +302,15 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 .dock b{font:600 .85rem var(--mono);color:var(--red);white-space:nowrap}
 .hud.spot::after{content:"";position:absolute;inset:10px;border:2px solid var(--red);pointer-events:none;animation:spotRing 1.4s ease-out 2 both}
 
+/* Footer — live visitors + total views (a part hides itself if its service is down) */
+.end{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 26px;
+  margin-top:8px;padding:0 var(--gut) 40px;
+  font:600 .72rem var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.end i{flex:1;height:1px;background:var(--line);min-width:24px}
+.end .live-dot{width:7px;height:7px;background:var(--red);display:inline-block;margin-right:10px;vertical-align:1px;animation:blink 2.2s ease-in-out infinite}
+.end b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+@media(max-width:720px){.end{letter-spacing:.18em;gap:8px 18px;padding-bottom:34px}}
+
 /* Viewers */
 .modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(12,11,11,.96);justify-content:center;align-items:center;padding:20px;cursor:zoom-out}
 .modal.active{display:flex;animation:rise .25s ease both}
@@ -369,7 +380,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 @media(max-width:460px){.metrics{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,::before,::after{animation:none!important;transition:none!important}.flow-step,.flow-arrow{opacity:1!important}}
 </style>
-<noscript><style>#heroName{visibility:visible!important}</style></noscript>
+<noscript><style>#heroName{visibility:visible!important}.end{display:none}</style></noscript>
 </head>
 <body>
 <header class="nav">
@@ -473,6 +484,14 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     </div>
   </main>
 </div>
+
+<!-- Live visitors + total views — each part hides itself if its service can't be reached -->
+<footer class="end">
+  <i aria-hidden="true"></i>
+  <span id="liveWrap"><span class="live-dot" aria-hidden="true"></span>Visitors online <b id="onlineCount">—</b></span>
+  <span id="viewsWrap" hidden>Total views <b id="viewsCount">—</b></span>
+  <i aria-hidden="true"></i>
+</footer>
 
 <div class="dock" id="dock"><output id="dockV"></output><input type="range" id="vSlider2" min="0.1" max="16" step="0.1" value="16" aria-label="Swing speed"><b id="dockStage"></b></div>
 
@@ -835,6 +854,70 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   });
   new IntersectionObserver(([e]) => e.isIntersecting ? bv.play().catch(() => {}) : bv.pause()).observe(bv);
 
+  /* ---------- Footer stats: total views + live visitors ----------
+     Total views: Abacus free counter (no account). Each page load is one hit.
+     Live visitors: Firebase presence — each open tab registers itself, Firebase
+     removes it on disconnect; a 2-minute TTL sweep catches stragglers.
+     Each footer part hides itself if its service fails; the whole footer hides
+     only if both fail. */
+  (function siteStats() {
+    const endEl = document.querySelector('.end');
+    const liveWrap = $('liveWrap'), viewsWrap = $('viewsWrap');
+    const syncEnd = () => { if (liveWrap.hidden && viewsWrap.hidden) endEl.style.display = 'none'; };
+
+    // --- Total views ---
+    const VKEY = 'go-duelist-application-views'; // unique key for this site (changing it resets the count)
+    fetch('https://abacus.jasoncameron.dev/hit/' + VKEY)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => {
+        if (d && d.value != null) {
+          $('viewsCount').textContent = (+d.value).toLocaleString('en-US');
+          viewsWrap.hidden = false; syncEnd();
+        }
+      })
+      .catch(() => { viewsWrap.hidden = true; syncEnd(); });
+
+    // --- Live visitors ---
+    if (typeof firebase === 'undefined') { liveWrap.hidden = true; syncEnd(); return; }
+
+    let db;
+    try {
+      firebase.initializeApp({
+        apiKey: "AIzaSyC9JOJ1A6h-gQNObFsImvfrYBDhNETz2Nw",
+        authDomain: "go-duelist-site.firebaseapp.com",
+        databaseURL: "https://go-duelist-site-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "go-duelist-site",
+        storageBucket: "go-duelist-site.firebasestorage.app",
+        messagingSenderId: "1076278623662",
+        appId: "1:1076278623662:web:415826649b1395d4b11c3f"
+      });
+      db = firebase.database();
+    } catch (e) { liveWrap.hidden = true; syncEnd(); return; }
+
+    const PRESENCE_TTL = 120000; // count a visitor for 2 min without a heartbeat
+    const myId = (crypto.randomUUID ? crypto.randomUUID() : 's-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    const myRef = db.ref('presence/' + myId);
+    const beat = () => myRef.set({ t: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+
+    beat();
+    myRef.onDisconnect().remove();   // server drops the entry the moment this tab disconnects
+    setInterval(beat, 30000);
+
+    const presRef = db.ref('presence');
+    // Sweep sessions that stopped heartbeating (crash / sleep before onDisconnect fired)
+    presRef.on('child_added', s => {
+      const v = s.val();
+      if (!v || Date.now() - (v.t || 0) > PRESENCE_TTL) s.ref.remove().catch(() => {});
+    });
+
+    presRef.on('value', snap => {
+      let n = 0;
+      const now = Date.now();
+      snap.forEach(c => { const v = c.val(); if (v && now - (v.t || 0) <= PRESENCE_TTL) n++; });
+      $('onlineCount').textContent = n;
+    }, () => { liveWrap.hidden = true; syncEnd(); });
+  })();
+
   // Simulation
   const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
   const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
@@ -1141,8 +1224,13 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   controls.addEventListener('start', hideHint);
   canvas.addEventListener('pointerdown', hideHint, { once: true });
 
+  /* Dock visibility: show while the simulation is on screen, but hide it as soon as
+     the footer (counters) scrolls into view so it can never cover them again. */
   const dock = $('dock');
-  new IntersectionObserver(([e]) => dock.classList.toggle('show', e.isIntersecting), { rootMargin: '-30% 0px -30% 0px' }).observe($('simulation'));
+  let simOn = false, footOn = false;
+  const syncDock = () => dock.classList.toggle('show', simOn && !footOn);
+  new IntersectionObserver(([e]) => { simOn = e.isIntersecting; syncDock(); }, { rootMargin: '-30% 0px -30% 0px' }).observe($('simulation'));
+  new IntersectionObserver(([e]) => { footOn = e.isIntersecting; syncDock(); }, { threshold: .5 }).observe(document.querySelector('.end'));
 
   // Init
   reset();
