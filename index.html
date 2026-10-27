@@ -854,31 +854,16 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   });
   new IntersectionObserver(([e]) => e.isIntersecting ? bv.play().catch(() => {}) : bv.pause()).observe(bv);
 
-  /* ---------- Footer stats: total views + live visitors ----------
-     Total views: Abacus free counter (no account). Each page load is one hit.
-     Live visitors: Firebase presence — each open tab registers itself, Firebase
-     removes it on disconnect; a 2-minute TTL sweep catches stragglers.
-     Each footer part hides itself if its service fails; the whole footer hides
-     only if both fail. */
+  /* ---------- Footer stats: total views + live visitors (both via Firebase) ----------
+     Total views: increment-only transaction on stats/views (rules reject any other write).
+     Live visitors: presence branch, auto-removed on disconnect, 2-min TTL sweep.
+     Each footer part hides itself if the connection fails. */
   (function siteStats() {
     const endEl = document.querySelector('.end');
     const liveWrap = $('liveWrap'), viewsWrap = $('viewsWrap');
     const syncEnd = () => { if (liveWrap.hidden && viewsWrap.hidden) endEl.style.display = 'none'; };
 
-    // --- Total views ---
-    const VKEY = 'go-duelist-application-views'; // unique key for this site (changing it resets the count)
-    fetch('https://abacus.jasoncameron.dev/hit/' + VKEY)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(d => {
-        if (d && d.value != null) {
-          $('viewsCount').textContent = (+d.value).toLocaleString('en-US');
-          viewsWrap.hidden = false; syncEnd();
-        }
-      })
-      .catch(() => { viewsWrap.hidden = true; syncEnd(); });
-
-    // --- Live visitors ---
-    if (typeof firebase === 'undefined') { liveWrap.hidden = true; syncEnd(); return; }
+    if (typeof firebase === 'undefined') { liveWrap.hidden = true; viewsWrap.hidden = true; syncEnd(); return; }
 
     let db;
     try {
@@ -892,19 +877,36 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
         appId: "1:1076278623662:web:415826649b1395d4b11c3f"
       });
       db = firebase.database();
-    } catch (e) { liveWrap.hidden = true; syncEnd(); return; }
+    } catch (e) { liveWrap.hidden = true; viewsWrap.hidden = true; syncEnd(); return; }
 
+    // --- Total views: increments once per page load, then listens live ---
+    const viewsRef = db.ref('stats/views');
+    viewsRef.transaction(v => (typeof v === 'number' && v >= 0 ? v + 1 : 1), undefined, false)
+      .catch(() => { viewsWrap.hidden = true; syncEnd(); });
+    viewsRef.on('value', s => {
+      const n = s.val();
+      if (typeof n === 'number') {
+        $('viewsCount').textContent = n.toLocaleString('en-US');
+        viewsWrap.hidden = false; syncEnd();
+      }
+    }, () => { viewsWrap.hidden = true; syncEnd(); });
+
+    // --- Live visitors ---
     const PRESENCE_TTL = 120000; // count a visitor for 2 min without a heartbeat
     const myId = (crypto.randomUUID ? crypto.randomUUID() : 's-' + Date.now() + '-' + Math.random().toString(36).slice(2));
     const myRef = db.ref('presence/' + myId);
     const beat = () => myRef.set({ t: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
 
+    let announced = false;
+    const giveUpLive = setTimeout(() => {
+      if (!announced) { liveWrap.hidden = true; syncEnd(); }
+    }, 15000);
+
     beat();
-    myRef.onDisconnect().remove();   // server drops the entry the moment this tab disconnects
+    myRef.onDisconnect().remove();
     setInterval(beat, 30000);
 
     const presRef = db.ref('presence');
-    // Sweep sessions that stopped heartbeating (crash / sleep before onDisconnect fired)
     presRef.on('child_added', s => {
       const v = s.val();
       if (!v || Date.now() - (v.t || 0) > PRESENCE_TTL) s.ref.remove().catch(() => {});
@@ -914,10 +916,11 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       let n = 0;
       const now = Date.now();
       snap.forEach(c => { const v = c.val(); if (v && now - (v.t || 0) <= PRESENCE_TTL) n++; });
+      announced = true; clearTimeout(giveUpLive);
       $('onlineCount').textContent = n;
-    }, () => { liveWrap.hidden = true; syncEnd(); });
+    }, () => { clearTimeout(giveUpLive); liveWrap.hidden = true; syncEnd(); });
   })();
-
+  
   // Simulation
   const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
   const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
