@@ -42,7 +42,7 @@ button{font-family:inherit}
   0%,100%{filter:drop-shadow(0 0 6px rgba(255,255,255,.25)) drop-shadow(0 0 16px rgba(255,255,255,.15))}
   50%{filter:drop-shadow(0 0 8px rgba(255,255,255,.85)) drop-shadow(0 0 22px rgba(255,255,255,.55)) drop-shadow(0 0 46px rgba(255,255,255,.3))}}
 @keyframes spin{to{transform:rotate(360deg)}}
-details[open] .body{animation:rise .3s ease both}
+details[open] .body,.ch-spoiler[open] .ch-body{animation:rise .3s ease both}
 
 /* Bracket blocks — shared by hero stub and flying ghost; scale with font-size via em */
 .bk{flex:none;width:.16em;height:1em;border:.08em solid currentColor}
@@ -103,7 +103,7 @@ details[open] .body{animation:rise .3s ease both}
 .brand-slot{display:inline-block;width:76px;height:30px}
 .nav-right{display:flex;align-items:center;gap:18px;align-self:stretch}
 .nav nav{display:flex;gap:26px;align-self:stretch}
-.nav nav a{display:flex;align-items:center;margin-bottom:-1px;font:600 1.1rem var(--display);letter-spacing:.04em;color:var(--mute);text-decoration:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.nav nav a{display:flex;align-items:center;white-space:nowrap;margin-bottom:-1px;font:600 1.1rem var(--display);letter-spacing:.04em;color:var(--mute);text-decoration:none;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
 .nav nav a:hover{color:var(--ink)}
 .nav nav a.on{color:var(--ink);border-color:var(--ink)}
 /* Discord discussion button — solid blurple; expands to the full description on hover (desktop only) */
@@ -362,12 +362,17 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 .lightbox.single .sl-nav,.lightbox.single .thumbs{display:none}
 
 @media(max-width:720px){
-  .nav nav{gap:16px}
+  /* Two-row bar on phones: [GO] + Discord on top, all 4 links on their own full-width row */
+  .nav{flex-wrap:wrap;justify-content:space-between;padding-top:calc(env(safe-area-inset-top,0px) + 8px)}
+  .nav-right{display:contents}
+  .brand-slot{order:1}
+  .nav-discord{order:2}
+  .nav nav{order:3;flex:0 0 100%;justify-content:space-between;gap:8px;min-height:40px}
+  .nav nav a{font-size:1rem;white-space:nowrap}
   /* Discord button goes icon-only on small screens */
   .nav-discord .dc-label,.nav-discord .dc-long{display:none}
   .nav-discord{padding:8px 10px}
-  .nav-right{gap:12px}
-  .card{padding-top:40px;padding-bottom:48px}
+  .card{padding-top:40px;padding-bottom:48px;scroll-margin-top:96px}
   .grid{grid-template-columns:1fr}
   figure.media .frame{height:220px}
   .view{height:270px}
@@ -415,7 +420,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 <header class="nav">
   <span class="brand-slot" aria-hidden="true"></span>
   <div class="nav-right">
-    <nav><a href="#profile">Profile</a><a href="#fanart">Fan art</a><a href="#simulation">Simulation</a></nav>
+    <nav><a href="#profile">Profile</a><a href="#fanart">Fan art</a><a href="#simulation">Simulation</a><a href="#challenge" id="navChallenge">Challenge Card</a></nav>
     <a class="nav-discord" href="https://discord.com/channels/108249481656418304/1560726003200950383" target="_blank" rel="noopener" aria-label="See duelist post in Hyun's Dojo Discord (opens in a new tab)">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
       <span class="dc-label" aria-hidden="true">Discord</span>
@@ -724,7 +729,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(refresh);
 
   // Top bar: highlight the section being read
-  const navLinks = [...$$('.nav nav a')], secs = ['profile', 'fanart', 'simulation'].map($);
+  const navLinks = [...$$('.nav nav a')], secs = ['profile', 'fanart', 'simulation', 'challenge'].map($);
   let navHold = false, navTimer;
   const setNav = id => navLinks.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + id));
   function updateNav() {
@@ -744,6 +749,14 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   addEventListener('resize', updateNav);
   $$('.nav nav a').forEach(a => a.addEventListener('click', () => holdNav(a.getAttribute('href').slice(1))));
   updateNav();
+
+  // "Challenge Card" → open the spoiler, then scroll down to it
+  $('navChallenge').addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector('.ch-spoiler').open = true;
+    holdNav('challenge');
+    $('challenge').scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  });
 
   // Jump-to-simulation buttons
   $$('[data-goto]').forEach(b => b.onclick = () => {
@@ -798,6 +811,8 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 
   // Theater modal (photo / video expand)
   const modal = $('theaterModal'), content = $('modalContent');
+  let theaterVideo = false, bgInView = true;
+  const bgVideo = () => document.querySelector('#videoBtn video');
   const openTheater = (tag, src, props, artist) => {
     const el = Object.assign(document.createElement(tag), { src }, props);
     const nodes = [el];
@@ -811,8 +826,12 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     }
     content.replaceChildren(...nodes);
     modal.classList.add('active');
+    if (tag === 'video') { theaterVideo = true; bgVideo().pause(); }
   };
-  const closeTheater = () => { modal.classList.remove('active'); content.replaceChildren(); };
+  const closeTheater = () => {
+    modal.classList.remove('active'); content.replaceChildren();
+    if (theaterVideo) { theaterVideo = false; if (bgInView) bgVideo().play().catch(() => {}); }
+  };
   const bind = (id, fn) => { const b = $(id); b.onclick = fn; b.onkeydown = e => e.key === 'Enter' && fn(); };
   bind('photoBtn', () => openTheater('img', 'assets/Banner%20Picture_v2.png', { alt: 'Go character expanded artwork' }));
   bind('videoBtn', () => openTheater('video', 'assets/Duelist%20Animatic_14.mp4', { controls: true, autoplay: true, playsInline: true }));
@@ -911,7 +930,10 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     vload.querySelector('.sq').style.display = 'none';
     vload.querySelector('.vload-txt').textContent = 'Demo unavailable';
   });
-  new IntersectionObserver(([e]) => e.isIntersecting ? bv.play().catch(() => {}) : bv.pause()).observe(bv);
+  new IntersectionObserver(([e]) => {
+    bgInView = e.isIntersecting;
+    if (bgInView && !theaterVideo) bv.play().catch(() => {}); else bv.pause();
+  }).observe(bv);
 
   /* ---------- Footer stats: total views + live visitors (both via Firebase) ----------
      Total views: increment-only transaction on stats/views (rules reject any other write).
