@@ -302,6 +302,35 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
 .dock b{font:600 .85rem var(--mono);color:var(--red);white-space:nowrap}
 .hud.spot::after{content:"";position:absolute;inset:10px;border:2px solid var(--red);pointer-events:none;animation:spotRing 1.4s ease-out 2 both}
 
+/* Challenge spoiler + card form (challenges land in the owner's Firebase inbox) */
+.ch-spoiler{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ch-spoiler > summary{list-style:none;cursor:pointer;user-select:none;display:flex;align-items:center;gap:16px;min-height:72px;padding:14px 0;font:700 clamp(1.7rem,4.5vw,2.4rem)/1.1 var(--display);letter-spacing:.02em;color:var(--ink);transition:color .2s}
+.ch-spoiler > summary::-webkit-details-marker{display:none}
+.ch-mark{flex:none;width:16px;height:16px;background:var(--red)}
+.ch-sum{flex:1;min-width:0}
+.ch-sp-hint{font:600 .68rem var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin-left:auto}
+.ch-spoiler > summary::after{content:"";flex:none;width:16px;height:16px;color:var(--mute);background:linear-gradient(currentColor,currentColor) center/100% 2px no-repeat,linear-gradient(currentColor,currentColor) center/2px 100% no-repeat;transition:transform .25s var(--ease),color .2s}
+.ch-spoiler[open] > summary::after{transform:rotate(45deg);color:var(--red)}
+.ch-spoiler > summary:hover::after{color:var(--ink)}
+.ch-spoiler[open] > summary .ch-sp-hint{display:none}
+.ch-body{max-width:660px;padding:2px 0 44px}
+.ch-lead{margin-top:14px;font-style:italic}
+.ch-body .fld{display:flex;flex-direction:column;gap:7px;margin-top:18px}
+.ch-body .fld > span{font:600 .68rem var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.ch-body input[type=text],.ch-body textarea{font:500 .95rem/1.5 var(--serif);color:var(--ink);
+  background:var(--panel);border:1px solid var(--line);padding:11px 13px;resize:vertical}
+.ch-body input::placeholder,.ch-body textarea::placeholder{color:var(--mute);opacity:.8}
+.ch-body input:focus-visible,.ch-body textarea:focus-visible{outline-offset:0;border-color:var(--mute)}
+.honey{position:absolute!important;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+.ch-send{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 24px;margin-top:6px;
+  font:700 1.15rem var(--display);letter-spacing:.04em;color:#141516;background:var(--ink);border:0;cursor:pointer;transition:background .2s}
+.ch-send:hover{background:var(--red)}
+.ch-send[disabled]{opacity:.55;cursor:default}
+.ch-status{display:block;margin-top:12px;font:600 .78rem var(--mono);letter-spacing:.12em;text-transform:uppercase;min-height:1.3em;color:var(--mute)}
+.ch-status.ok{color:var(--green)}
+.ch-status.err{color:var(--red)}
+.ch-status a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+
 /* Footer — live visitors + total views (a part hides itself if its service is down) */
 .end{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 26px;
   margin-top:8px;padding:0 var(--gut) 40px;
@@ -483,6 +512,36 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       <canvas id="curve"></canvas>
     </div>
   </main>
+
+  <!-- Challenge spoiler: submissions land in the owner's Firebase inbox
+       (Firebase console → Realtime Database → Data → challenges) -->
+  <section class="card" id="challenge">
+    <details class="ch-spoiler">
+      <summary>
+        <span class="ch-mark" aria-hidden="true"></span>
+        <span class="ch-sum">Send Go a challenge card</span>
+        <span class="ch-sp-hint">Click to open</span>
+        <span class="ch-x" aria-hidden="true"></span>
+      </summary>
+      <div class="ch-body">
+        <p class="ch-lead">Go hates one sided fight, so tread carefully</p>
+        <form id="challengeForm" novalidate>
+          <div class="fld">
+            <span for="chName">Duelist / challenger name</span>
+            <input type="text" id="chName" maxlength="32" placeholder="Who's entering the ring?" autocomplete="off">
+          </div>
+          <div class="fld">
+            <span for="chMsg">Message</span>
+            <textarea id="chMsg" maxlength="600" rows="4" placeholder="Link your duelist, your terms, etc"></textarea>
+          </div>
+          <!-- Honeypot: humans never see or fill this; bots do, and get silently ignored -->
+          <input type="text" class="honey" id="chHoney" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button type="submit" class="ch-send" id="chSend">Send Challenge Card</button>
+          <span class="ch-status" id="chStatus" role="status" aria-live="polite"></span>
+        </form>
+      </div>
+    </details>
+  </section>
 </div>
 
 <!-- Live visitors + total views — each part hides itself if its service can't be reached -->
@@ -857,7 +916,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
   /* ---------- Footer stats: total views + live visitors (both via Firebase) ----------
      Total views: increment-only transaction on stats/views (rules reject any other write).
      Live visitors: presence branch, auto-removed on disconnect, 2-min TTL sweep.
-     Each footer part hides itself if the connection fails. */
+     Each footer part hides itself if its service fails. */
   (function siteStats() {
     const endEl = document.querySelector('.end');
     const liveWrap = $('liveWrap'), viewsWrap = $('viewsWrap');
@@ -878,6 +937,7 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       });
       db = firebase.database();
     } catch (e) { liveWrap.hidden = true; viewsWrap.hidden = true; syncEnd(); return; }
+    fbDb = db; // shared with the challenge card
 
     // --- Total views: increments once per page load, then listens live ---
     const viewsRef = db.ref('stats/views');
@@ -903,10 +963,11 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
     }, 15000);
 
     beat();
-    myRef.onDisconnect().remove();
+    myRef.onDisconnect().remove();   // server drops the entry the moment this tab disconnects
     setInterval(beat, 30000);
 
     const presRef = db.ref('presence');
+    // Sweep sessions that stopped heartbeating (crash / sleep before onDisconnect fired)
     presRef.on('child_added', s => {
       const v = s.val();
       if (!v || Date.now() - (v.t || 0) > PRESENCE_TTL) s.ref.remove().catch(() => {});
@@ -920,7 +981,61 @@ input[type=range]:active::-moz-range-thumb{transform:scale(1.15)}
       $('onlineCount').textContent = n;
     }, () => { clearTimeout(giveUpLive); liveWrap.hidden = true; syncEnd(); });
   })();
-  
+
+  /* ---------- Challenge card → Firebase inbox (challenges/) ----------
+     Submissions are written to challenges/ in your database. Read them in the
+     Firebase console → Realtime Database → Data tab → challenges. They are
+     private (no public read) and only create-able, never editable by visitors.
+     On every submission, an instant push notification is fired through ntfy.sh
+     to your phone (subscribe once to the topic below). */
+  (function challengeCard() {
+    const form = $('challengeForm'); if (!form) return;
+    const nameEl = $('chName'), msgEl = $('chMsg'), honey = $('chHoney');
+    const sendBtn = $('chSend'), st = $('chStatus');
+    let timer;
+    const say = (txt, cls) => {
+      st.textContent = txt; st.className = 'ch-status' + (cls ? ' ' + cls : '');
+      clearTimeout(timer); timer = setTimeout(() => { st.textContent = ''; st.className = 'ch-status'; }, 6000);
+    };
+    const sayLink = html => { st.innerHTML = html; st.className = 'ch-status err'; };
+    const fallback = () => sayLink('COULDN’T SEND — <a href="https://discord.com/channels/108249481656418304/1560726003200950383" target="_blank" rel="noopener">POST IT IN THE DISCORD INSTEAD</a>');
+
+    // Push notification to the owner's phone (ntfy.sh — subscribe to this exact topic)
+    const NTFY_TOPIC = 'go-duelist-challenges-8k3v2m9q';
+    const notifyOwner = (name, msg) => {
+      fetch('https://ntfy.sh/' + NTFY_TOPIC, {
+        method: 'POST',
+        headers: { 'Title': 'Duelist challenge', 'Tags': 'crossed_swords', 'Priority': 'high' },
+        body: (name + ': ' + msg).slice(0, 400)
+      }).catch(() => {});
+    };
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (form.dataset.busy) return;
+      // Honeypot: bots fill the hidden field — pretend success, send nothing
+      if (honey.value) { say('CHALLENGE CARD SENT', 'ok'); form.reset(); return; }
+
+      const name = nameEl.value.trim(), msg = msgEl.value.trim();
+      if (!name || !msg) { say('FILL IN BOTH FIELDS TO SEND', 'err'); return; }
+
+      notifyOwner(name, msg); // fire-and-forget push (carries the message even if the DB write fails)
+
+      if (!fbDb) { fallback(); return; }   // Firebase unreachable → offer the Discord post
+
+      form.dataset.busy = '1'; sendBtn.disabled = true;
+      fbDb.ref('challenges').push({
+        name, msg, t: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        form.reset(); say('CHALLENGE CARD SENT — GO WILL ANSWER', 'ok');
+      }).catch(() => {
+        fallback();
+      }).finally(() => {
+        delete form.dataset.busy; sendBtn.disabled = false;
+      });
+    });
+  })();
+
   // Simulation
   const V_MIN = 0.1, V_MAX = 16, SPAN = 15.9, MASS = 4;
   const slow = (v, p) => Math.pow(Math.max(0, (V_MAX - v) / SPAN), p);
